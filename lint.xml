@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="HandlerLeak">
+        <ignore path="src/com/example/sockettest/Client.java" />
+    </issue>
+    <issue id="UseSparseArrays">
+        <ignore path="src/com/example/sockettest/CheapAAC.java" />
+    </issue>
+    <issue id="UseValueOf">
+        <ignore path="src/com/example/sockettest/StreamSourceThread.java" />
+    </issue>
+</lint>

@@ -1,14 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
 
     <TextView
-        android:id="@+id/client_id"
+        android:id="@+id/current_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="CLIENT: "
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+        android:gravity="center"
+        android:text="tap any song"
+        android:textAllCaps="true"
+        android:textSize="45sp"
+        android:textStyle="bold"
+        android:singleLine="true"
+		android:scrollHorizontally="true"
+		android:ellipsize="marquee"
+		android:marqueeRepeatLimit="marquee_forever"/>
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/current_artist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/current_title"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text="song to start"
+        android:textAllCaps="true"
+        android:textSize="30sp" />
+
+    <TabHost
+        android:id="@+id/tabhost"
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@+id/button_group"
+        android:layout_below="@+id/current_artist" >
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical" >
+
+            <TabWidget
+                android:id="@android:id/tabs"
+                android:layout_width="match_parent"
+                android:layout_height="29dp" >
+            </TabWidget>
+
+            <FrameLayout
+                android:id="@android:id/tabcontent"
+                android:layout_width="match_parent"
+                android:layout_height="fill_parent" >
+
+                <FrameLayout
+                    android:id="@+id/library"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" >
+
+                    <ListView
+                        android:id="@+id/libraryListView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" >
+                    </ListView>
+
+                    <ListView
+                        android:id="@+id/host_library_list_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" >
+                    </ListView>
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/playlist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone" >
+
+                    <ListView
+                        android:id="@+id/host_playlist_list_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" >
+                    </ListView>
+                </FrameLayout>
+
+                <FrameLayout
+                    android:id="@+id/settings"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent" >
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical" >
+
+                        <TextView
+                            android:id="@+id/client_id"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="HOST: "
+                            android:textAppearance="?android:attr/textAppearanceLarge" />
+                    </LinearLayout>
+                </FrameLayout>
+            </FrameLayout>
+        </LinearLayout>
+    </TabHost>
+</RelativeLayout>
