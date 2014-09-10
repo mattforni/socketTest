@@ -26,8 +26,8 @@ public class NetworkLayer {
             this.input = socket.getInputStream();
             this.output = socket.getOutputStream();
 
-            // Begin listening on the input and output streams
-            new InputListener(this).run();
+            // Begin listening on the input stream
+            new InputListener(this).start();
         } catch (IOException e) {
             Log.e(tag(this), format("Unable to open I/O"), e);
         }
