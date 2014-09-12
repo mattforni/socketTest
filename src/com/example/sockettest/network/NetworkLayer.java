@@ -37,13 +37,10 @@ public class NetworkLayer {
         disconnecting = true;
         try {
             socket.close();
-//          Message msg1 = Message.obtain();
-//          disconnectHandler.sendMessage(msg1);
         } catch (IOException e) {
             disconnecting = false;
             Log.e(tag(this), format("Unable to close I/O"), e);
         }
-
     }
 
     public final InputStream input() { return input; }
@@ -52,6 +49,7 @@ public class NetworkLayer {
     public final OutputStream output() { return output; }
     public final void setInitialized(final boolean initialized) { this.initialized = initialized; }
 
+    @SuppressWarnings("unused")
     private class InputListener extends Thread {
         private final byte[] codeBuffer = new byte[1];
         private final NetworkLayer network;
@@ -64,8 +62,8 @@ public class NetworkLayer {
         public void run() {
             // TODO need a break condition for this while
             while(true) {
-                Action action = Action.Factory.getAction(readCode(), network);
                 // TODO submit this action the 'input' executor service to be performed
+                 Action action = Action.Factory.getAction(readCode(), network);
             }
         }
 
@@ -78,6 +76,4 @@ public class NetworkLayer {
             return codeBuffer[0];
         }
     }
-
-    // TODO create a similar private class for the OutputListener
 }

@@ -1,8 +1,10 @@
 package com.example.sockettest.server;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import static com.example.sockettest.utils.Logger.tag;
+import static java.lang.String.format;
+
+import java.io.IOException;
+import java.util.Random;
 
 import android.media.MediaPlayer;
 import android.os.Bundle;
@@ -12,100 +14,110 @@ import android.widget.TabHost.TabSpec;
 
 import com.example.sockettest.Device;
 import com.example.sockettest.R;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.example.sockettest.music.Song;
+import com.example.sockettest.music.SongManager.UnknownSongException;
+import com.example.sockettest.ui.LibraryView;
 
 public class Server extends Device {
     public static final String ADDRESS_KEY = "ADDRESS";
     public static final String PORT_KEY = "PORT";
 
-    private static final List<Map<String, String>> FAKE_SONGS = Lists.newArrayList();
+    private static final String ID = "SERVER";
+    private static final Random RANDOM = new Random();
 
-    private boolean playing, searching, shuffle, streaming;
     private final MediaPlayer player;
 
     public Server() {
-        this.playing = false;
-        this.searching = false;
-        this.shuffle = false;
-        this.streaming = false;
+        super(ID);
         this.player = initializePlayer();
     }
 
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // TODO change this name to client_view
-        setContentView(R.layout.host_view);
-        initializeTabs();
+    @Override
+    public boolean enqueueSong(final int position, final boolean fromSearch) {
+        boolean enqueued = false;
+        try {
+            songManager.enqueue(getSong(position, fromSearch));
+            // TODO update playlist view
+            // TODO notify clients of the update
+            enqueued = true;
+            Log.w(tag(this), format("Enqueued song: %d", position));
+        } catch (UnknownSongException e) {
+            Log.w(tag(this), format("Unable to enqueue song: %d", position));
+        }
+        return enqueued;
     }
 
     @Override
-    public void onTabChanged(String tabId) {
-        // TODO Auto-generated method stub
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.server_view);
+        initializeTabs();
+        this.libraryView = new LibraryView(this, true);
+        this.libraryView.updateLibrary(songManager.getAllSongs());
     }
 
-    public final List<Map<String, String>> getLibrary() {
-        return FAKE_SONGS;
-    }
-
-    public final boolean isPlaying() { return playing; }
-    public final boolean isSearching() { return searching; }
-
-    public synchronized final void next() {
-        if(streaming) {
-            streamSinkThread.pause();
-            streamSinkThread.flush();
-            streaming = false;
+    @Override
+    public void onTabChanged(final String tabId) {
+        int pageNumber = 0;
+        if(tabId.equals("tab1")){  
+            pageNumber = 0;  
+        } else if(tabId.equals("tab2")){  
+            pageNumber = 1;  
+        } else{  
+            pageNumber = 2;  
         }
-        playSong(getNextSong());
     }
 
-    public synchronized final void pause() {
-        if (streaming) {
-            Log.w("HOST","STREAMING");
-            streamSinkThread.pause();
-        } else {
-            Log.w("HOST","NOT STREAMING");
-            player.pause();
-        }
+    // TODO need to support playlists and streaming as well
+    public final boolean next() {
+        return playSong(getNext(), false);
+    }
+
+    // TODO need to support streaming
+    public final boolean pause() {
+        player.pause();
         playing = false;
+        Log.i(tag(this), "Player is paused");
+        return true;
     }
 
-    public synchronized final void play() {
-        if (streaming) {
-            Log.w("HOST","STREAMING");
-            streamSinkThread.play();
-        } else {
-            Log.w("HOST","NOT STREAMING");
-            player.start();
+    // TODO need to support streaming
+    public final boolean play() {
+        if (currentIndex < 0) {
+            return next();
         }
+        player.start();
         playing = true;
+        Log.i(tag(this), "Player is playing");
+        return true;
     }
 
-    public synchronized final void previous() {
+    public final boolean play(final int index, final boolean fromSearch) {
+        return playSong(index, fromSearch);
+    }
+
+    public final boolean previous() {
         // TODO implement functionality to play previous song
+        return false;
     }
 
-    public final ImmutableList<Map<String, String>> search(final String query) {
-        List<Map<String, String>> found = Lists.newLinkedList();
-        for(final Map<String, String> song : getLibrary()) {
-            String lowerTitle = song.get("title").toLowerCase(Locale.ENGLISH);
-            String lowerArtist = song.get("artist").toLowerCase(Locale.ENGLISH);
-            String lowerQuery = query.toLowerCase(Locale.ENGLISH);
-            if(lowerTitle.contains(lowerQuery) || lowerArtist.contains(lowerQuery)) {
-                found.add(song);
-            }
+    private int getNext() {
+        if (songManager.isEmpty()) { return -1; }
+        if (nextIndex > -1) { return nextIndex; }
+        final int numSongs = songManager.numSongs();
+        if (shuffle) {
+            nextIndex = RANDOM.nextInt(numSongs);
+        } else {
+            nextIndex = (currentIndex + 1) >= numSongs ? 0 : currentIndex + 1;
         }
-        return ImmutableList.copyOf(found);
+        return nextIndex;
     }
 
     private MediaPlayer initializePlayer() {
-        MediaPlayer player = new MediaPlayer();
+        final MediaPlayer player = new MediaPlayer();
         player.reset();
         player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            public void onCompletion(MediaPlayer mp) {
-                playSong(getNextSong());
-            }
+            public void onCompletion(MediaPlayer mp) { next(); }
         });
         return player;
     }
@@ -131,4 +143,28 @@ public class Server extends Device {
 
         tabs.setOnTabChangedListener(this);
      }
+
+    // TODO need to support streaming
+    private boolean playSong(final int index, final boolean fromSearch) {
+        // If the provided index is current index nothing should be done
+        if (index == currentIndex) { return false; }
+        try {
+            final Song song = getSong(index, fromSearch);
+            libraryView.updateCurrentSong(song);
+            if(song.isLocal(this)) {
+                player.reset();
+                player.setDataSource(song.getPath());
+                player.prepare();
+                player.start();
+                nextIndex = -1;
+                Log.i(tag(this), format("Playing: %s", song.getPath()));
+                return true;
+            }
+        } catch (UnknownSongException e) {
+            Log.e(tag(this),"Unknown song selected for playback", e);
+        } catch (IllegalArgumentException | SecurityException | IllegalStateException | IOException e) {
+            Log.e(tag(this),"Unexpected error during media playback", e);
+        }
+        return false;
+    }
 }
