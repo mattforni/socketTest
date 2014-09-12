@@ -27,8 +27,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity  android:name="com.example.sockettest.Host" android:screenOrientation="portrait" />
-        <activity  android:name="com.example.sockettest.Client" android:screenOrientation="portrait" />
+        <activity android:name="com.example.sockettest.Host" android:screenOrientation="portrait" />
+        <activity android:name="com.example.sockettest.Client" android:screenOrientation="portrait" />
+        <activity android:name="com.example.sockettest.server.Server" android:screenOrientation="portrait" />
     </application>
 
 </manifest>

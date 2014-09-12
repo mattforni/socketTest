@@ -56,6 +56,13 @@
         android:text="HOST" />
 
     <Button
+        android:id="@+id/server"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.2"
+        android:text="SERVER" />
+
+    <Button
         android:id="@+id/client"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
