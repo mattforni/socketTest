@@ -69,19 +69,15 @@ public class Server extends Device {
             Log.e(tag(this), format("Unable to initialize ClientManager on %s:%d", address, port));
         }
 
-        this.libraryView = new LibraryView(this, true);
+        this.libraryView = new LibraryView(this);
         this.libraryView.updateLibrary(songManager.getAllSongs());
     }
 
     @Override
     public void onTabChanged(final String tabId) {
-        int pageNumber = 0;
         if(tabId.equals("tab1")){
-            pageNumber = 0;
         } else if(tabId.equals("tab2")){
-            pageNumber = 1;
         } else{
-            pageNumber = 2;
         }
     }
 
@@ -100,9 +96,7 @@ public class Server extends Device {
 
     // TODO need to support streaming
     public final boolean play() {
-        if (currentIndex < 0) {
-            return next();
-        }
+        if (currentIndex < 0) { return next(); }
         player.start();
         playing = true;
         Log.i(tag(this), "Player is playing");
@@ -185,6 +179,7 @@ public class Server extends Device {
                 player.setDataSource(song.getPath());
                 player.prepare();
                 player.start();
+                currentIndex = index;
                 nextIndex = -1;
                 Log.i(tag(this), format("Playing: %s", song.getPath()));
                 return true;

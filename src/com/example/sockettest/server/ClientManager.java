@@ -44,8 +44,7 @@ public class ClientManager extends Thread {
         while (!isInterrupted()) {
             try {
                 final String clientId = generateUUID();
-                final NetworkLayer network = new NetworkLayer(server, socket.accept());
-                clientMap.put(clientId, network);
+                clientMap.put(clientId, new NetworkLayer(server, socket.accept()));
                 publishMessage(clientId, new PublishClientId(clientId));
                 Log.i(tag(this), format("Accepted new client with ID: %s", clientId));
             } catch (IOException e) {
