@@ -2,57 +2,45 @@ package com.example.sockettest.network.input;
 
 import static com.example.sockettest.utils.Logger.tag;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
+import java.util.List;
 
 import android.util.Log;
 
-import com.example.sockettest.JsonSongDeserializer;
+import com.example.sockettest.Device;
+import com.example.sockettest.music.Song;
+import com.example.sockettest.network.Deserializer;
 import com.example.sockettest.network.Message.InputMessage;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 
 public class ReceiveLibrary extends InputMessage {
-    private static final byte[] BUFFER = new byte[1];
     private static final String IDENTIFIER = "ReceiveLibrary";
-    private static final JsonSongDeserializer SONG_DESERIALIZER = new JsonSongDeserializer();
 
     @Override
     public String getIdentifier() { return IDENTIFIER; }
 
     @Override
-    public void receive(final InputStream input) {
-        // Receive music from the client
+    public void receive(final InputStream input, final Device device) {
         Log.i(tag(this), "CODE 0 RECIEVED");
-        char current = nextChar(input);
-        final StringBuilder string = new StringBuilder();
 
-        while(current != '\0') {
-            if(current == '\n') {
-                // TODO figure out what to do with the song
-                JsonElement json = new JsonParser().parse(string.toString());
-                Map<String,String> song = SONG_DESERIALIZER.deserialize(json, null, null);
-//                localMusicList.add(song);
+        final List<Song> songs = Lists.newLinkedList();
+        final StringBuilder data = new StringBuilder();
+        char currentChar = nextChar(input);
+        while(currentChar != '\0') {
+            if(currentChar == '\n') {
+                final JsonElement json = JSON.parse(data.toString());
+                songs.add(Deserializer.parseSong(json));
 
                 // Clear the string buffer.
-                string.setLength(0);
+                data.setLength(0);
             } else {
-                string.append(current);
+                data.append(currentChar);
             }
-
-            current = nextChar(input);
+            currentChar = nextChar(input);
         }
 
-        // TODO create a good log message here
-    }
-
-    private char nextChar(final InputStream input) {
-        try {
-            input.read(BUFFER);
-        } catch (IOException e) {
-            handleException(e);
-        }
-        return (char) BUFFER[0];
+        device.updateLibrary(ImmutableList.copyOf(songs));
     }
 }

@@ -11,6 +11,7 @@ import java.net.Socket;
 import android.util.Log;
 
 import com.example.sockettest.Device;
+import com.example.sockettest.network.Message.InputMessage;
 import com.example.sockettest.network.Message.OutputMessage;
 
 public class NetworkLayer {
@@ -51,11 +52,9 @@ public class NetworkLayer {
     }
 
     public final synchronized void receiveMessage(final byte code) {
-        // TODO how do we receive a message since each has a variable amount of bytes
+        final InputMessage message = InputMessage.getMessage(code);
+        message.receive(input, device);
     }
-
-    public final InputStream input() { return input; }
-    public final OutputStream output() { return output; }
 
     private class InputListener extends Thread {
         private final byte[] codeBuffer = new byte[1];
