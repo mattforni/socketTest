@@ -18,7 +18,8 @@ import com.google.common.collect.Maps;
 public abstract class Device extends Activity implements OnTabChangeListener {
     protected Map<String, String> currentSong;
     protected final SongManager songManager;
-
+    protected boolean isServer;
+    
     private final String id;
     private final Map<String, Integer> searchMap; // Map of concat title and artist to song index
     private final List<Song> searchResults;
@@ -34,6 +35,7 @@ public abstract class Device extends Activity implements OnTabChangeListener {
         this.songManager = new SongManager(this);
         this.searchResults = Lists.newArrayListWithExpectedSize(127);
         this.searchMap = Maps.newHashMap();
+        this.isServer = false;
 
         this.currentIndex = -1;
         this.nextIndex = 1;
@@ -60,6 +62,10 @@ public abstract class Device extends Activity implements OnTabChangeListener {
             }
         }
         return ImmutableList.copyOf(searchResults);
+    }
+    
+    public final boolean isServer() {
+    	return isServer;
     }
 
     protected final Song getSong(

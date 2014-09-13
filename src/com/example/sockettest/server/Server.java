@@ -29,6 +29,7 @@ public class Server extends Device {
 
     public Server() {
         super(ID);
+        this.isServer = true;
         this.player = initializePlayer();
     }
 
@@ -52,7 +53,7 @@ public class Server extends Device {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.server_view);
         initializeTabs();
-        this.libraryView = new LibraryView(this, true);
+        this.libraryView = new LibraryView(this);
         this.libraryView.updateLibrary(songManager.getAllSongs());
     }
 
