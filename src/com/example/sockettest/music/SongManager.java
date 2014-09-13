@@ -69,6 +69,10 @@ public class SongManager {
         return allSongs.size();
     }
 
+    public final void updateLibrary(final List<Song> songs) {
+        allSongs.addAll(songs);
+    }
+
     private void initializeLibraryFile() {
         // If the library directory does not exist create it
         final File libraryDir = new File(LIBRARY_DIR);

@@ -10,60 +10,59 @@ import java.net.Socket;
 
 import android.util.Log;
 
-import com.example.sockettest.actions.Action;
+import com.example.sockettest.Device;
+import com.example.sockettest.network.Message.InputMessage;
+import com.example.sockettest.network.Message.OutputMessage;
 
 public class NetworkLayer {
-    private boolean disconnecting, initialized;
-    private Socket socket;
+    private final Device device;
+    private final Socket socket;
+
     private InputStream input;
     private OutputStream output;
+    private boolean shutdown;
 
-    public NetworkLayer(final Socket socket) {
-        this.disconnecting = false;
-        this.initialized = false;
+    public NetworkLayer(final Device device, final Socket socket) {
+        this.device = device;
         this.socket = socket;
+        this.shutdown = false;
+
         try {
             this.input = socket.getInputStream();
             this.output = socket.getOutputStream();
 
             // Begin listening on the input stream
-            new InputListener(this).start();
+            new InputListener().start();
         } catch (IOException e) {
             Log.e(tag(this), format("Unable to open I/O"), e);
         }
     }
 
     public final void disconnect() {
-        disconnecting = true;
         try {
             socket.close();
+            shutdown = true;
         } catch (IOException e) {
-            disconnecting = false;
             Log.e(tag(this), format("Unable to close I/O"), e);
         }
     }
 
-    public final InputStream input() { return input; }
-    public final boolean isDisconnecting() { return disconnecting; }
-    public final boolean isInitialized() { return initialized; }
-    public final OutputStream output() { return output; }
-    public final void setInitialized(final boolean initialized) { this.initialized = initialized; }
+    public final synchronized void publishMessage(final OutputMessage message) {
+        message.publish(output);
+    }
 
-    @SuppressWarnings("unused")
+    public final synchronized void receiveMessage(final byte code) {
+        final InputMessage message = InputMessage.getMessage(code);
+        message.receive(input, device);
+    }
+
     private class InputListener extends Thread {
         private final byte[] codeBuffer = new byte[1];
-        private final NetworkLayer network;
-
-        public InputListener(final NetworkLayer network) {
-            this.network = network;
-        }
 
         @Override
         public void run() {
-            // TODO need a break condition for this while
-            while(true) {
-                // TODO submit this action the 'input' executor service to be performed
-                 Action action = Action.Factory.getAction(readCode(), network);
+            while(!shutdown) {
+                receiveMessage(readCode());
             }
         }
 

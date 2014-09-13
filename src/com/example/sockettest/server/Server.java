@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import java.io.IOException;
 import java.util.Random;
 
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,19 +17,24 @@ import com.example.sockettest.Device;
 import com.example.sockettest.R;
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.SongManager.UnknownSongException;
+import com.example.sockettest.network.Message;
 import com.example.sockettest.ui.LibraryView;
 
 public class Server extends Device {
     public static final String ADDRESS_KEY = "ADDRESS";
     public static final String PORT_KEY = "PORT";
 
+    private static final String DEFAULT_ADDRESS = "0.0.0.0";
+    private static final int DEFAULT_PORT = 8080;
     private static final String ID = "SERVER";
     private static final Random RANDOM = new Random();
 
+    private final ClientManager clientManager;
     private final MediaPlayer player;
 
     public Server() {
         super(ID);
+        this.clientManager = new ClientManager(this);
         this.player = initializePlayer();
     }
 
@@ -52,19 +58,26 @@ public class Server extends Device {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.server_view);
         initializeTabs();
-        this.libraryView = new LibraryView(this, true);
+
+        final Intent intent = getIntent();
+        String address = intent.getStringExtra(ADDRESS_KEY);
+        if (address == null) { address = DEFAULT_ADDRESS; }
+        final int port = intent.getIntExtra(PORT_KEY, DEFAULT_PORT);
+        try {
+            clientManager.start(address, port);
+        } catch (IOException e) {
+            Log.e(tag(this), format("Unable to initialize ClientManager on %s:%d", address, port));
+        }
+
+        this.libraryView = new LibraryView(this);
         this.libraryView.updateLibrary(songManager.getAllSongs());
     }
 
     @Override
     public void onTabChanged(final String tabId) {
-        int pageNumber = 0;
-        if(tabId.equals("tab1")){  
-            pageNumber = 0;  
-        } else if(tabId.equals("tab2")){  
-            pageNumber = 1;  
-        } else{  
-            pageNumber = 2;  
+        if(tabId.equals("tab1")){
+        } else if(tabId.equals("tab2")){
+        } else{
         }
     }
 
@@ -83,9 +96,7 @@ public class Server extends Device {
 
     // TODO need to support streaming
     public final boolean play() {
-        if (currentIndex < 0) {
-            return next();
-        }
+        if (currentIndex < 0) { return next(); }
         player.start();
         playing = true;
         Log.i(tag(this), "Player is playing");
@@ -99,6 +110,18 @@ public class Server extends Device {
     public final boolean previous() {
         // TODO implement functionality to play previous song
         return false;
+    }
+
+    @Override
+    public void publishMessage(final Message message) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void receiveMessage(final Message message) {
+        // TODO Auto-generated method stub
+        
     }
 
     private int getNext() {
@@ -156,6 +179,7 @@ public class Server extends Device {
                 player.setDataSource(song.getPath());
                 player.prepare();
                 player.start();
+                currentIndex = index;
                 nextIndex = -1;
                 Log.i(tag(this), format("Playing: %s", song.getPath()));
                 return true;

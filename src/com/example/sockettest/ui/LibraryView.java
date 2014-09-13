@@ -18,17 +18,18 @@ import com.example.sockettest.utils.Songs;
 import com.google.common.collect.Lists;
 
 public class LibraryView {
-    private final String[] ADAPTER_FROM = new String[] {"title","artist"};
+    private final String[] ADAPTER_FROM = new String[] {Song.TITLE_KEY, Song.ARTIST_KEY};
     private final int ADAPTER_RESOURCE = R.layout.list_item;
     private final int[] ADAPTER_TO = new int[] {R.id.list_item_title, R.id.list_item_artist};
 
     private final Device device;
     private final ListView libraryView, searchView;
     private final List<Map<String, String>> libraryList, searchList;
+    private final PlayerControls playerControls;
     private final SimpleAdapter libraryAdapter, searchAdapter;
     private final TextView currentArtist, currentTitle;
 
-    public LibraryView(final Device device, final boolean showControls) {
+    public LibraryView(final Device device) {
         this.device = device;
 
         this.libraryList = Lists.newArrayList();
@@ -46,7 +47,7 @@ public class LibraryView {
         this.currentArtist = (TextView) device.findViewById(R.id.current_artist);
         this.currentTitle = (TextView) device.findViewById(R.id.current_title);
 
-        if (showControls) { new PlayerControls(device); }
+        this.playerControls = new PlayerControls(device);
         new SearchBar(device, this);
 
         libraryView.setOnItemClickListener(new PlayClickListener(false));
@@ -98,6 +99,7 @@ public class LibraryView {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
             device.play(position, fromSearch);
+            playerControls.showPauseButton();
         }
     }
 

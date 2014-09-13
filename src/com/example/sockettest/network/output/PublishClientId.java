@@ -1,4 +1,4 @@
-package com.example.sockettest.actions;
+package com.example.sockettest.network.output;
 
 import static com.example.sockettest.utils.Logger.tag;
 import static java.lang.String.format;
@@ -9,16 +9,16 @@ import java.io.OutputStream;
 import android.util.Log;
 
 import com.example.sockettest.JsonIdSerializer;
-import com.example.sockettest.network.NetworkLayer;
+import com.example.sockettest.network.Message.OutputMessage;
 import com.google.gson.JsonElement;
 
-public class SendClientId extends Action {
+public class PublishClientId extends OutputMessage {
     private static final JsonIdSerializer ID_SERIALIZER = new JsonIdSerializer();
     private static final String IDENTIFIER = "SendClientId";
 
     private final JsonElement clientId;
 
-    public SendClientId(final String clientIdString) {
+    public PublishClientId(final String clientIdString) {
         this.clientId = ID_SERIALIZER.serialize(clientIdString, null, null);
     }
 
@@ -26,8 +26,7 @@ public class SendClientId extends Action {
     public final String getIdentifier() { return IDENTIFIER; }
 
     @Override
-    public final void perform(final NetworkLayer network) {
-        OutputStream output = network.output();
+    public final void publish(final OutputStream output) {
         try {
             output.write(0);
             output.write(clientId.toString().getBytes());

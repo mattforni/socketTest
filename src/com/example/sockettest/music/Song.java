@@ -21,22 +21,28 @@ import com.example.sockettest.Device;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.gson.JsonObject;
 
 public abstract class Song {
-    public static final String ARTIST_KEY = "artist";
-    public static final String TITLE_KEY = "title";
+    public static final String ARTIST_KEY = "ARTIST";
+    public static final String OWNER_KEY = "OWNER_ID";
+    public static final String PATH_KEY = "PATH";
+    public static final String TITLE_KEY = "TITLE";
+    public static final String TYPE_KEY = "TYPE";
 
     private static final int NUM_MAP_FIELDS = 2;
     private static final String UNKNOWN_ARTIST = "unknown artist";
 
     protected final String owner, path, artist, title;
+    protected final Type type;
 
     protected Song(final String owner, final String path,
-            final String artist, final String title) {
+            final String artist, final String title, final Type type) {
         this.owner = owner;
         this.path = path;
         this.artist = artist;
         this.title = title;
+        this.type = type;
     }
 
     public final String getArtist() {
@@ -49,6 +55,10 @@ public abstract class Song {
 
     public final String getTitle() {
         return title;
+    }
+
+    public final Type getType() {
+        return type;
     }
 
     public final boolean isLocal(final Device device) {
@@ -64,33 +74,52 @@ public abstract class Song {
 
     public static Song parse(final Device device, final File file) throws CannotReadException,
             IOException, TagException, ReadOnlyFileException, InvalidAudioFrameException {
-        if (isMP3(file)) { // MP3 file handling
+        if (Type.MP3.isType(file)) { // MP3 file handling
             return MP3Song.parse(device, file);
-        } else if (isM4A(file)) { // M4A file handling
+        } else if (Type.M4A.isType(file)) { // M4A file handling
             return M4ASong.parse(device, file);
         } else {
             return null;
         }
     }
 
-    public static final boolean isMP3(final File file) {
-        if (file == null) { return false; }
-        final String extension = FilenameUtils.getExtension(file.getAbsolutePath());
-        return MP3Song.EXTENSIONS.contains(extension);
+    public static Song parse(final JsonObject json) {
+        final String owner = json.get(OWNER_KEY).getAsString();
+        final String path = json.get(PATH_KEY).getAsString();
+        final String artist = json.get(ARTIST_KEY).getAsString();
+        final String title = json.get(TITLE_KEY).getAsString();
+        final Type type = Type.valueOf(json.get(TYPE_KEY).getAsString());
+        switch (type) {
+            case MP3:
+                return new MP3Song(owner, path, artist, title);
+            case M4A:
+                return new M4ASong(owner, path, artist, title);
+            default:
+                throw new IllegalArgumentException("Malformed song json");
+        }
     }
 
-    public static final boolean isM4A(final File file) {
-        if (file == null) { return false; }
-        final String extension = FilenameUtils.getExtension(file.getAbsolutePath());
-        return M4ASong.EXTENSIONS.contains(extension);
+    public static enum Type {
+        MP3 (Lists.newArrayList("mp3", "MP3")),
+        M4A (Lists.newArrayList("m4a", "M4A"));
+
+        private final List<String> extensions;
+
+        private Type(final List<String> extensions) {
+            this.extensions = extensions;
+        }
+
+        public final boolean isType(final File file) {
+            if (file == null) { return false; }
+            final String extension = FilenameUtils.getExtension(file.getAbsolutePath());
+            return extensions.contains(extension);
+        }
     }
 
     public static class MP3Song extends Song {
-        private static final List<String> EXTENSIONS = Lists.newArrayList("mp3", "MP3");
-
         public MP3Song(final String owner, final String path,
                 final String artist, final String title) {
-            super(owner, path, artist, title);
+            super(owner, path, artist, title, Type.MP3);
         }
 
         public static final Song parse(final Device device, final File file) throws CannotReadException,
@@ -110,11 +139,9 @@ public abstract class Song {
     }
 
     public static class M4ASong extends Song {
-        private static final List<String> EXTENSIONS = Lists.newArrayList("m4a", "M4A");
-
         public M4ASong(final String owner, final String path,
                 final String artist, final String title) {
-            super(owner, path, artist, title);
+            super(owner, path, artist, title, Type.M4A);
         }
 
         public static final Song parse(final Device device, final File file) throws CannotReadException,
