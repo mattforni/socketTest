@@ -7,61 +7,77 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.SocketAddress;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
 import android.util.Log;
 
-import com.example.sockettest.actions.SendClientId;
 import com.example.sockettest.network.NetworkLayer;
+import com.example.sockettest.network.Message.OutputMessage;
+import com.example.sockettest.network.output.PublishClientId;
 import com.google.common.collect.Maps;
 
 public class ClientManager extends Thread {
-    private static final String DEFAULT_ADDRESS = "0.0.0.0";
-    private static final int DEFAULT_PORT = 8080;
-
     private final Map<String, NetworkLayer> clientMap;
-    private final ServerSocket server;
+    private final Server server;
 
-    public ClientManager(final String address, final int port) throws IOException {
+    private boolean running;
+    private ServerSocket socket;
+
+    public ClientManager(final Server server) {
+        this.server = server;
         this.clientMap = Maps.newLinkedHashMap();
-        this.server = initializeServer(address, port);
+        this.running = false;
     }
 
     @Override
     public final void run() {
-        Log.i(tag(this), format("Listening for clients at: %s", server.getLocalSocketAddress()));
+        if (socket == null) { Log.w(tag(this), "Try calling start(address, port)"); }
+        if (running) { return; }
+
+        Log.i(tag(this), format("Listening for clients at: %s", socket.getLocalSocketAddress()));
+        running = true;
 
         // This is the main loop which waits for and handles incoming connections
         while (!isInterrupted()) {
             try {
                 final String clientId = generateUUID();
-                final NetworkLayer network = new NetworkLayer(server.accept());
-                new SendClientId(clientId).perform(network);
+                final NetworkLayer network = new NetworkLayer(server, socket.accept());
                 clientMap.put(clientId, network);
+                publishMessage(clientId, new PublishClientId(clientId));
                 Log.i(tag(this), format("Accepted new client with ID: %s", clientId));
             } catch (IOException e) {
-                Log.e(tag(this), "Unexpectedly unable to accept a new client", e);
+                Log.e(tag(this), "Unable to accept a new client", e);
             }
         }
     }
 
-    private ServerSocket initializeServer(final String address, final int port) throws IOException {
-        try {
-            SocketAddress socketAddress = new InetSocketAddress(address, port);
-            ServerSocket server = new ServerSocket();
-            server.setReuseAddress(true);
-            server.bind(socketAddress);
-            return server;
-        } catch (IOException e) {
-            // If unable to initialize on the default address and port throw the exception.
-            if (address.equals(DEFAULT_ADDRESS) && port == DEFAULT_PORT) { throw e; }
-
-            // Otherwise log and recursively try to initialize on the default address and port.
-            Log.w(tag(this), format("Could not initalize server at %s:%d", address, port), e);
-            return initializeServer(DEFAULT_ADDRESS, DEFAULT_PORT);
+    public final void publishMessage(final String clientId, final OutputMessage message) {
+        final NetworkLayer network = clientMap.get(clientId);
+        if (network == null) {
+            Log.e(tag(this), format("Unable to find network for %s", clientId));
+            return;
         }
+        network.publishMessage(message);
+    }
+
+    public final void publishMessage(final List<String> clientIds, final OutputMessage message) {
+        for (final String clientId : clientIds) { publishMessage(clientId, message); }
+    }
+
+    public final void start(final String address, final int port) throws IOException {
+        socket = initializeSocket(address, port);
+        start();
+    }
+
+    private ServerSocket initializeSocket(final String address, final int port) throws IOException {
+        SocketAddress socketAddress = new InetSocketAddress(address, port);
+        ServerSocket server = new ServerSocket();
+        server.setReuseAddress(true);
+        server.bind(socketAddress);
+        return server;
     }
 
     private String generateUUID() {

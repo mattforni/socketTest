@@ -7,9 +7,10 @@ import java.util.Map.Entry;
 import android.app.Activity;
 import android.widget.TabHost.OnTabChangeListener;
 
+import com.example.sockettest.music.Song;
 import com.example.sockettest.music.SongManager;
 import com.example.sockettest.music.SongManager.UnknownSongException;
-import com.example.sockettest.music.Song;
+import com.example.sockettest.network.Message;
 import com.example.sockettest.ui.LibraryView;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -32,6 +33,7 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     protected Device(final String id) {
         this.id = id;
         this.songManager = new SongManager(this);
+        // TODO Move search results over to the song manager
         this.searchResults = Lists.newArrayListWithExpectedSize(127);
         this.searchMap = Maps.newHashMap();
 
@@ -47,6 +49,8 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     public abstract boolean play();
     public abstract boolean play(int index, boolean fromSearch);
     public abstract boolean previous();
+    public abstract void publishMessage(Message message);
+    public abstract void receiveMessage(Message message);
 
     public final String getId() {
         return id;
