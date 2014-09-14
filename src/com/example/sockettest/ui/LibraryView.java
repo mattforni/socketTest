@@ -47,7 +47,8 @@ public class LibraryView {
         this.currentArtist = (TextView) device.findViewById(R.id.current_artist);
         this.currentTitle = (TextView) device.findViewById(R.id.current_title);
 
-        this.playerControls = new PlayerControls(device);
+
+        this.playerControls = device.isServer() ? new PlayerControls(device) : null;
         new SearchBar(device, this);
 
         libraryView.setOnItemClickListener(new PlayClickListener(false));

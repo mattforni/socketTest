@@ -35,6 +35,7 @@ public class Server extends Device {
     public Server() {
         super(ID);
         this.clientManager = new ClientManager(this);
+        this.isServer = true;
         this.player = initializePlayer();
     }
 
