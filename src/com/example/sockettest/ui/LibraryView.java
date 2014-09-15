@@ -100,7 +100,7 @@ public class LibraryView {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
             device.play(position, fromSearch);
-            playerControls.showPauseButton();
+            if (playerControls != null) { playerControls.showPauseButton(); }
         }
     }
 
