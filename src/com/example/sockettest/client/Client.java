@@ -1,27 +1,24 @@
 package com.example.sockettest.client;
 
-import java.util.Random;
+import static com.example.sockettest.utils.Logger.tag;
 
+import java.io.IOException;
+
+import android.content.Intent;
 import android.os.Bundle;
-import android.widget.TabHost;
-import android.widget.TabHost.TabSpec;
+import android.util.Log;
 
 import com.example.sockettest.Device;
 import com.example.sockettest.R;
+import com.example.sockettest.network.Message;
+import com.example.sockettest.network.NetworkLayer;
 import com.example.sockettest.ui.LibraryView;
 
 public class Client extends Device {
-    public static final String ADDRESS_KEY = "ADDRESS";
-    public static final String PORT_KEY = "PORT";
-
-    private static final String ID = "SERVER";
-    private static final Random RANDOM = new Random();
+    private NetworkLayer network;
 
     public Client() {
-        
-    	// TODO Recieve ID from host
-    	
-    	super(ID);
+    	super(null);
     }
 
     @Override
@@ -35,44 +32,22 @@ public class Client extends Device {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.server_view);
-        initializeTabs();
-        this.libraryView = new LibraryView(this);
-        this.libraryView.updateLibrary(songManager.getAllSongs());
-    }
+        try {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.client_view);
+            initializeTabs();
 
-    private void initializeTabs() {
-        TabHost tabs = (TabHost)findViewById(R.id.tabhost);
+            final Intent intent = getIntent();
+            final String address = intent.getStringExtra(ADDRESS_KEY);
+            final int port = intent.getIntExtra(PORT_KEY, 0);
+            this.network = new NetworkLayer(this, address, port);
 
-        tabs.setup();
-        TabSpec spec = tabs.newTabSpec("tab1");
-        spec.setContent(R.id.library);
-        spec.setIndicator("LIBRARY");
-        tabs.addTab(spec);
-
-        spec = tabs.newTabSpec("tab2");
-        spec.setContent(R.id.playlist);
-        spec.setIndicator("PLAYLIST");
-        tabs.addTab(spec);
-
-        spec = tabs.newTabSpec("tab3");
-        spec.setContent(R.id.settings);
-        spec.setIndicator("SETTINGS");
-        tabs.addTab(spec);
-
-        tabs.setOnTabChangedListener(this);
-     }
-    
-    @Override
-    public void onTabChanged(final String tabId) {
-        int pageNumber = 0;
-        if(tabId.equals("tab1")){  
-            pageNumber = 0;  
-        } else if(tabId.equals("tab2")){  
-            pageNumber = 1;  
-        } else{  
-            pageNumber = 2;  
+            songManager.loadLibrary();
+            this.libraryView = new LibraryView(this);
+            this.libraryView.updateLibrary(songManager.getAllSongs());
+        } catch (IOException e) {
+            Log.e(tag(this), "Unable to initialize client", e);
+            System.exit(1);
         }
     }
 
@@ -111,4 +86,16 @@ public class Client extends Device {
 		// TODO Auto-generated method stub
 		return false;
 	}
+
+    @Override
+    public void publishMessage(Message message) {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void receiveMessage(Message message) {
+        // TODO Auto-generated method stub
+        
+    }
 }

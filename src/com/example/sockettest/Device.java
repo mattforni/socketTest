@@ -5,7 +5,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import android.app.Activity;
+import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
+import android.widget.TabHost.TabSpec;
 
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.SongManager;
@@ -17,6 +19,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public abstract class Device extends Activity implements OnTabChangeListener {
+    public static final String ADDRESS_KEY = "ADDRESS";
+    public static final String PORT_KEY = "PORT";
+
     protected Map<String, String> currentSong;
     protected final SongManager songManager;
 
@@ -71,6 +76,14 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     	return isServer;
     }
 
+    @Override
+    public void onTabChanged(final String tabId) {
+        if(tabId.equals("tab1")){
+        } else if(tabId.equals("tab2")){
+        } else{
+        }
+    }
+
     public final void setId(final String id) {
         this.id = id;
     }
@@ -86,4 +99,26 @@ public abstract class Device extends Activity implements OnTabChangeListener {
         if (index < 0 || index >= searchResults.size()) { throw new UnknownSongException(index); }
         return searchResults.get(index);
     }
+
+    protected void initializeTabs() {
+        TabHost tabs = (TabHost)findViewById(R.id.tabhost);
+
+        tabs.setup();
+        TabSpec spec = tabs.newTabSpec("tab1");
+        spec.setContent(R.id.library);
+        spec.setIndicator("LIBRARY");
+        tabs.addTab(spec);
+
+        spec = tabs.newTabSpec("tab2");
+        spec.setContent(R.id.playlist);
+        spec.setIndicator("PLAYLIST");
+        tabs.addTab(spec);
+
+        spec = tabs.newTabSpec("tab3");
+        spec.setContent(R.id.settings);
+        spec.setIndicator("SETTINGS");
+        tabs.addTab(spec);
+
+        tabs.setOnTabChangedListener(this);
+     }
 }
