@@ -8,9 +8,8 @@ import java.io.InputStream;
 import android.util.Log;
 
 import com.example.sockettest.Device;
-import com.example.sockettest.JsonIdDeserializer;
+import com.example.sockettest.network.Deserializer;
 import com.example.sockettest.network.Message.InputMessage;
-import com.google.gson.JsonElement;
 
 public class ReceiveClientId extends InputMessage {
     private static final String IDENTIFIER = "ReceiveClientId";
@@ -29,11 +28,10 @@ public class ReceiveClientId extends InputMessage {
             currentChar = nextChar(input);
         }
 
-        JsonElement jsonElement = JSON.parse(data.toString());
-        JsonIdDeserializer deserializerId = new JsonIdDeserializer();
-        String clientId = deserializerId.deserialize(jsonElement, null, null);
-        device.setId(clientId);
-
-        Log.w(tag(this), format("ClientId received: ", clientId));
+        final String clientId = Deserializer.parseId(JSON.parse(data.toString()));
+        if (clientId != null) {
+            device.setId(clientId);
+            Log.w(tag(this), format("ClientId received: %s", clientId));
+        }
     }
 }

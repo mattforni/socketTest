@@ -10,8 +10,6 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TabHost;
-import android.widget.TabHost.TabSpec;
 
 import com.example.sockettest.Device;
 import com.example.sockettest.R;
@@ -19,11 +17,9 @@ import com.example.sockettest.music.Song;
 import com.example.sockettest.music.SongManager.UnknownSongException;
 import com.example.sockettest.network.Message;
 import com.example.sockettest.ui.LibraryView;
+import com.example.sockettest.ui.PlaylistView;
 
 public class Server extends Device {
-    public static final String ADDRESS_KEY = "ADDRESS";
-    public static final String PORT_KEY = "PORT";
-
     private static final String DEFAULT_ADDRESS = "0.0.0.0";
     private static final int DEFAULT_PORT = 8080;
     private static final String ID = "SERVER";
@@ -35,6 +31,7 @@ public class Server extends Device {
     public Server() {
         super(ID);
         this.clientManager = new ClientManager(this);
+        this.isServer = true;
         this.player = initializePlayer();
     }
 
@@ -43,7 +40,7 @@ public class Server extends Device {
         boolean enqueued = false;
         try {
             songManager.enqueue(getSong(position, fromSearch));
-            // TODO update playlist view
+            playlistView.updatePlaylist(songManager.getPlaylist());
             // TODO notify clients of the update
             enqueued = true;
             Log.w(tag(this), format("Enqueued song: %d", position));
@@ -55,29 +52,25 @@ public class Server extends Device {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.server_view);
-        initializeTabs();
-
-        final Intent intent = getIntent();
-        String address = intent.getStringExtra(ADDRESS_KEY);
-        if (address == null) { address = DEFAULT_ADDRESS; }
-        final int port = intent.getIntExtra(PORT_KEY, DEFAULT_PORT);
         try {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.server_view);
+            initializeTabs();
+
+            final Intent intent = getIntent();
+            String address = intent.getStringExtra(ADDRESS_KEY);
+            if (address == null) { address = DEFAULT_ADDRESS; }
+            final int port = intent.getIntExtra(PORT_KEY, DEFAULT_PORT);
             clientManager.start(address, port);
+
+            songManager.loadLibrary();
+            this.libraryView = new LibraryView(this);
+            this.libraryView.updateLibrary(songManager.getAllSongs());
+
+            this.playlistView = new PlaylistView(this);
         } catch (IOException e) {
-            Log.e(tag(this), format("Unable to initialize ClientManager on %s:%d", address, port));
-        }
-
-        this.libraryView = new LibraryView(this);
-        this.libraryView.updateLibrary(songManager.getAllSongs());
-    }
-
-    @Override
-    public void onTabChanged(final String tabId) {
-        if(tabId.equals("tab1")){
-        } else if(tabId.equals("tab2")){
-        } else{
+            Log.e(tag(this), "Unable to initialize server");
+            System.exit(1);
         }
     }
 
@@ -99,6 +92,7 @@ public class Server extends Device {
         if (currentIndex < 0) { return next(); }
         player.start();
         playing = true;
+        libraryView.showPauseButton();
         Log.i(tag(this), "Player is playing");
         return true;
     }
@@ -115,13 +109,11 @@ public class Server extends Device {
     @Override
     public void publishMessage(final Message message) {
         // TODO Auto-generated method stub
-        
     }
 
     @Override
     public void receiveMessage(final Message message) {
         // TODO Auto-generated method stub
-        
     }
 
     private int getNext() {
@@ -144,28 +136,6 @@ public class Server extends Device {
         });
         return player;
     }
-
-    private void initializeTabs() {
-        TabHost tabs = (TabHost)findViewById(R.id.tabhost);
-
-        tabs.setup();
-        TabSpec spec = tabs.newTabSpec("tab1");
-        spec.setContent(R.id.library);
-        spec.setIndicator("LIBRARY");
-        tabs.addTab(spec);
-
-        spec = tabs.newTabSpec("tab2");
-        spec.setContent(R.id.playlist);
-        spec.setIndicator("PLAYLIST");
-        tabs.addTab(spec);
-
-        spec = tabs.newTabSpec("tab3");
-        spec.setContent(R.id.settings);
-        spec.setIndicator("SETTINGS");
-        tabs.addTab(spec);
-
-        tabs.setOnTabChangedListener(this);
-     }
 
     // TODO need to support streaming
     private boolean playSong(final int index, final boolean fromSearch) {

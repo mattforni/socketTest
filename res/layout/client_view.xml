@@ -53,24 +53,46 @@
                 android:layout_width="match_parent"
                 android:layout_height="fill_parent" >
 
-                <FrameLayout
+                <LinearLayout
                     android:id="@+id/library"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:orientation="vertical"
                     android:visibility="gone" >
 
-                    <ListView
-                        android:id="@+id/libraryListView"
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" >
-                    </ListView>
+
+                        <EditText
+                            android:id="@+id/search_box"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:ems="10" />
+
+                        <ImageButton
+                            android:id="@+id/search_button"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight=".5"
+                            android:background="@null"
+                            android:paddingBottom="5dp"
+                            android:paddingTop="5dp"
+                            android:src="@drawable/abc_ic_search_api_holo_light" />
+                    </LinearLayout>
 
                     <ListView
-                        android:id="@+id/host_library_list_view"
+                        android:id="@+id/library_view"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" >
                     </ListView>
-                </FrameLayout>
+                    <ListView
+                        android:id="@+id/search_view"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" >
+                    </ListView>
+                </LinearLayout>
 
                 <FrameLayout
                     android:id="@+id/playlist"

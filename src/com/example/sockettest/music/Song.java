@@ -3,6 +3,7 @@ package com.example.sockettest.music;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
@@ -113,6 +114,11 @@ public abstract class Song {
             if (file == null) { return false; }
             final String extension = FilenameUtils.getExtension(file.getAbsolutePath());
             return extensions.contains(extension);
+        }
+
+        @Override
+        public final String toString() {
+            return name();
         }
     }
 

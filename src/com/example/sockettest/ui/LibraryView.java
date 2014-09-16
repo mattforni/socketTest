@@ -47,7 +47,8 @@ public class LibraryView {
         this.currentArtist = (TextView) device.findViewById(R.id.current_artist);
         this.currentTitle = (TextView) device.findViewById(R.id.current_title);
 
-        this.playerControls = new PlayerControls(device);
+
+        this.playerControls = device.isServer() ? new PlayerControls(device) : null;
         new SearchBar(device, this);
 
         libraryView.setOnItemClickListener(new PlayClickListener(false));
@@ -55,6 +56,10 @@ public class LibraryView {
 
         searchView.setOnItemClickListener(new PlayClickListener(true));
         searchView.setOnItemLongClickListener(new EnqueueClickListener(true));
+    }
+
+    public final void showPauseButton() {
+        if (playerControls != null) { playerControls.showPauseButton(); }
     }
 
     public final void showSearch(final String query) {
@@ -99,7 +104,6 @@ public class LibraryView {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
             device.play(position, fromSearch);
-            playerControls.showPauseButton();
         }
     }
 

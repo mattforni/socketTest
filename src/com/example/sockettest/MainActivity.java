@@ -9,6 +9,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.sockettest.server.Server;
+import com.example.sockettest.client.Client;
 
 public class MainActivity extends ActionBarActivity {
 
@@ -55,15 +56,15 @@ public class MainActivity extends ActionBarActivity {
                 finish();
             }
         });
-		clientButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent intent = new Intent(getApplicationContext(), Client.class);
-				intent.putExtra("ADDRESS", getAddress());
-				intent.putExtra("PORT", getPort());
-				startActivity(intent);
-				finish();
-			}
+        clientButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), Client.class);
+                intent.putExtra("ADDRESS", getAddress());
+                intent.putExtra("PORT", getPort());
+                startActivity(intent);
+                finish();
+            }
         });
 	}
 	

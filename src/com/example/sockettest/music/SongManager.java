@@ -4,6 +4,7 @@ import static com.example.sockettest.utils.Logger.tag;
 import static java.lang.String.format;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -17,14 +18,17 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.example.sockettest.Device;
+import com.example.sockettest.music.Song.M4ASong;
+import com.example.sockettest.music.Song.MP3Song;
+import com.example.sockettest.music.Song.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class SongManager {
     private static final String EXTERNAL_PATH = Environment.getExternalStorageDirectory().toString();
     private static final String[] EXTENSIONS = new String[] {"mp3", "MP3", "m4a", "M4A"};
-    private static final String LIBRARY_DIR = EXTERNAL_PATH + "/DELTA";
-    private static final File LIBRARY_FILE = new File(LIBRARY_DIR, "MusicList.txt");
+    private static final String LIBRARY_DIR = EXTERNAL_PATH + "/Delta";
+    private static final File LIBRARY_FILE = new File(LIBRARY_DIR, "local_songs.txt");
 
     private final Device device;
     private final List<Song> allSongs, localSongs, playlist;
@@ -35,9 +39,6 @@ public class SongManager {
         this.allSongs = Lists.newArrayListWithExpectedSize(127);
         this.localSongs = Lists.newArrayListWithExpectedSize(127);
         this.playlist = Lists.newArrayListWithExpectedSize(127);
-
-        initializeLibraryFile();
-        loadLocalMusic();
     }
 
     public final void enqueue(final Song song) {
@@ -65,6 +66,15 @@ public class SongManager {
         return allSongs.isEmpty();
     }
 
+    public final void loadLibrary() throws IOException {
+        if (!LIBRARY_FILE.exists()) {
+            loadLocalMusic();
+            new LibraryWriter().start();
+        } else {
+            loadLibraryFile();
+        }
+    }
+
     public final int numSongs() {
         return allSongs.size();
     }
@@ -73,60 +83,97 @@ public class SongManager {
         allSongs.addAll(songs);
     }
 
-    private void initializeLibraryFile() {
-        // If the library directory does not exist create it
-        final File libraryDir = new File(LIBRARY_DIR);
-        if (!libraryDir.exists()) { libraryDir.mkdirs(); }
+    private void loadLibraryFile() throws IOException {
+        Log.i(tag(this), format("Loading music from '%s'", LIBRARY_FILE.getAbsolutePath()));
 
-        // If the library file does not exist create it
-        if(!LIBRARY_FILE.exists()) {
-            try {
-                LIBRARY_FILE.createNewFile();
-                final FileWriter writer = new FileWriter(LIBRARY_FILE);
-                writer.write("0\n");
-                writer.close();
-            } catch (IOException e) {
-                Log.e(tag(this), format("Unable to initialize: %s", LIBRARY_FILE.getAbsolutePath()), e);
+        BufferedReader reader = null;
+        try {
+            final List<Song> newSongs = Lists.newLinkedList();
+            reader = new BufferedReader(new FileReader(LIBRARY_FILE));
+            final String owner = device.getId();
+            final int size = Integer.parseInt(reader.readLine());
+            for(int i = 0; i < size; i++) {
+                String path = reader.readLine();
+                Type type = Type.valueOf(reader.readLine());
+                String title = reader.readLine();
+                String artist = reader.readLine();
+                switch (type) {
+                    case MP3:
+                        newSongs.add(new MP3Song(owner, path, artist, title));
+                        break;
+                    case M4A:
+                        newSongs.add(new M4ASong(owner, path, artist, title));
+                        break;
+                }
             }
+
+            allSongs.clear();
+            allSongs.addAll(newSongs);
+        } catch (FileNotFoundException e) {
+            throw new IOException("Library file does not exist", e);
+        } catch (NumberFormatException e) {
+            throw new IOException("Malformed library file", e);
+        } finally {
+            if (reader != null) { reader.close(); }
         }
     }
 
-    private void loadLocalMusic() {
+    private final void loadLocalMusic() {
+        Log.i(tag(this), "Loading music from SD card");
+
         for(final File file : FileUtils.listFiles(new File(EXTERNAL_PATH), EXTENSIONS, true)) {
             try {
                 localSongs.add(Song.parse(device, file));
             } catch (Exception e) {
-                Log.e(tag(this), format("Unable to parse song from: %s", file), e);
+                Log.w(tag(this), format("Unable to parse song from: %s", file));
                 continue;
             }
         }
         allSongs.addAll(localSongs);
     }
 
-    private void loadLibraryFile(final boolean reload) {
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(LIBRARY_FILE));
-            final int size = Integer.parseInt(reader.readLine());
-            if (reload) { allSongs.clear(); }
+    private class LibraryWriter extends Thread {
+        @Override
+        public final void run() {
+            // If the library directory does not exist create it
+            final File libraryDir = new File(LIBRARY_DIR);
+            if (!libraryDir.isDirectory()) {
+                if (libraryDir.mkdirs()) {
+                    Log.i(tag(this), format("Created '%s'", libraryDir.getAbsolutePath()));
+                }
+            }
 
-            // TODO read in from file and make into a song
+            BufferedWriter writer = null;
+            try {
+                // If the file does not exist create it
+                if(!LIBRARY_FILE.exists()) {
+                    if (LIBRARY_FILE.createNewFile()) {
+                        Log.i(tag(this), format("Created '%s'", LIBRARY_FILE.getAbsolutePath()));
+                    }
+                }
 
-            reader.close();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (NumberFormatException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+                writer = new BufferedWriter(new FileWriter(LIBRARY_FILE, false));
+                writer.write(format("%d\n", localSongs.size()));
+                for (final Song song : localSongs) {
+                    writer.write(format("%s\n", song.getPath()));
+                    writer.write(format("%s\n", song.getType()));
+                    writer.write(format("%s\n", song.getTitle()));
+                    writer.write(format("%s\n", song.getArtist()));
+                }
+
+                Log.i(tag(this), format("Wrote %d song(s) to library file", localSongs.size()));
+            } catch (IOException e) {
+                Log.e(tag(this), "Unable to write library file", e);
+            } finally {
+                if (writer != null) {
+                    try {
+                        writer.close();
+                    } catch (IOException e) {
+                        Log.e(tag(this), "Unable to close file writer", e);
+                    }
+                }
+            }
         }
-    }
-
-    private void writeLibraryFile() {
-        // TODO be able to write library to a file
     }
 
     @SuppressWarnings("serial")

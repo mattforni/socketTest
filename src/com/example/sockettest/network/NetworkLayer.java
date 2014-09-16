@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 import android.util.Log;
 
@@ -16,26 +17,27 @@ import com.example.sockettest.network.Message.OutputMessage;
 
 public class NetworkLayer {
     private final Device device;
-    private final Socket socket;
 
+    private String address;
     private InputStream input;
     private OutputStream output;
+    private int port;
+    private Socket socket;
     private boolean shutdown;
 
     public NetworkLayer(final Device device, final Socket socket) {
         this.device = device;
         this.socket = socket;
         this.shutdown = false;
+        new Connection().run();
+    }
 
-        try {
-            this.input = socket.getInputStream();
-            this.output = socket.getOutputStream();
-
-            // Begin listening on the input stream
-            new InputListener().start();
-        } catch (IOException e) {
-            Log.e(tag(this), format("Unable to open I/O"), e);
-        }
+    public NetworkLayer(final Device device, final String address, final int port) {
+        this.device = device;
+        this.address = address;
+        this.port = port;
+        this.shutdown = false;
+        new Connection().run();
     }
 
     public final void disconnect() {
@@ -56,9 +58,27 @@ public class NetworkLayer {
         message.receive(input, device);
     }
 
-    private class InputListener extends Thread {
-        private final byte[] codeBuffer = new byte[1];
+    private class Connection extends Thread {
+        @Override
+        public void run() {
+            try {
+                if (socket == null) { socket = new Socket(address, port); }
+                input = socket.getInputStream();
+                output = socket.getOutputStream();
 
+                // Begin listening on the input stream
+                new InputListener().start();
+            } catch (UnknownHostException e) {
+                Log.e(tag(this), format("Could not find server at %s:%d", address, port));
+                System.exit(1);
+            } catch (IOException e) {
+                Log.e(tag(this), format("Unable to initialize network on %s:%d", address, port));
+                System.exit(1);
+            }
+        }
+    }
+
+    private class InputListener extends Thread {
         @Override
         public void run() {
             while(!shutdown) {
@@ -67,12 +87,13 @@ public class NetworkLayer {
         }
 
         private byte readCode() {
+            final byte[] buffer = new byte[1];
             try {
-                input.read(codeBuffer);
+                input.read(buffer);
             } catch (IOException e) {
                 Log.e(tag(this), format("Unable to read code"), e);
             }
-            return codeBuffer[0];
+            return buffer[0];
         }
     }
 }
