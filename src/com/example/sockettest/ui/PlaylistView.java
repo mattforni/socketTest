@@ -13,7 +13,7 @@ import com.example.sockettest.utils.Songs;
 import com.google.common.collect.Lists;
 
 public class PlaylistView {
-    private final String[] ADAPTER_FROM = new String[] {"title","artist"};
+    private final String[] ADAPTER_FROM = new String[] {Song.TITLE_KEY, Song.ARTIST_KEY};
     private final int ADAPTER_RESOURCE = R.layout.list_item;
     private final int[] ADAPTER_TO = new int[] {R.id.list_item_title, R.id.list_item_artist};
 
@@ -30,11 +30,13 @@ public class PlaylistView {
 
         this.playlistView = (ListView)device.findViewById(R.id.playlist_view);
         this.playlistView.setAdapter(playlistAdapter);
+
+//        playlistView.setOnItemClickListener(new PlayClickListener(false));
     }
 
     // TODO Enqueues a list of songs
-    
     public final void updatePlaylist(final List<Song> enqueuedSongs) {
+        playlistList.clear();
         playlistList.addAll(Songs.toListOfMaps(enqueuedSongs));
         playlistAdapter.notifyDataSetChanged();
     }

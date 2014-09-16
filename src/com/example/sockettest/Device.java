@@ -14,6 +14,7 @@ import com.example.sockettest.music.SongManager;
 import com.example.sockettest.music.SongManager.UnknownSongException;
 import com.example.sockettest.network.Message;
 import com.example.sockettest.ui.LibraryView;
+import com.example.sockettest.ui.PlaylistView;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -29,6 +30,7 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     protected int currentIndex, nextIndex;
     protected boolean isServer, playing, shuffle;
     protected LibraryView libraryView;
+    protected PlaylistView playlistView;
 
     private final Map<String, Integer> searchMap; // Map of concat title and artist to song index
     private final List<Song> searchResults;

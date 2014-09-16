@@ -1,5 +1,6 @@
 package com.example.sockettest.network;
 
+import static com.example.sockettest.network.Serializer.ID_KEY;
 import static java.lang.String.format;
 import android.util.Log;
 
@@ -11,7 +12,7 @@ public abstract class Deserializer {
     public static final String parseId(final JsonElement serializedId) {
         try {
             final JsonObject jsonObject = serializedId.getAsJsonObject();
-            return jsonObject.get("ID").getAsString();
+            return jsonObject.get(ID_KEY).getAsString();
         } catch (IllegalStateException e) {
             Log.w("Deserializer", format("Unable to parse id from %s", serializedId));
         }

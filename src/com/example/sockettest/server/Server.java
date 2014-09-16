@@ -17,6 +17,7 @@ import com.example.sockettest.music.Song;
 import com.example.sockettest.music.SongManager.UnknownSongException;
 import com.example.sockettest.network.Message;
 import com.example.sockettest.ui.LibraryView;
+import com.example.sockettest.ui.PlaylistView;
 
 public class Server extends Device {
     private static final String DEFAULT_ADDRESS = "0.0.0.0";
@@ -39,7 +40,7 @@ public class Server extends Device {
         boolean enqueued = false;
         try {
             songManager.enqueue(getSong(position, fromSearch));
-            // TODO update playlist view
+            playlistView.updatePlaylist(songManager.getPlaylist());
             // TODO notify clients of the update
             enqueued = true;
             Log.w(tag(this), format("Enqueued song: %d", position));
@@ -65,6 +66,8 @@ public class Server extends Device {
             songManager.loadLibrary();
             this.libraryView = new LibraryView(this);
             this.libraryView.updateLibrary(songManager.getAllSongs());
+
+            this.playlistView = new PlaylistView(this);
         } catch (IOException e) {
             Log.e(tag(this), "Unable to initialize server");
             System.exit(1);
@@ -89,6 +92,7 @@ public class Server extends Device {
         if (currentIndex < 0) { return next(); }
         player.start();
         playing = true;
+        libraryView.showPauseButton();
         Log.i(tag(this), "Player is playing");
         return true;
     }

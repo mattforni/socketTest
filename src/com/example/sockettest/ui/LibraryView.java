@@ -58,6 +58,10 @@ public class LibraryView {
         searchView.setOnItemLongClickListener(new EnqueueClickListener(true));
     }
 
+    public final void showPauseButton() {
+        if (playerControls != null) { playerControls.showPauseButton(); }
+    }
+
     public final void showSearch(final String query) {
         searchList.addAll(Songs.toListOfMaps(device.search(query)));
         searchAdapter.notifyDataSetChanged();
@@ -100,7 +104,6 @@ public class LibraryView {
         @Override
         public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
             device.play(position, fromSearch);
-            if (playerControls != null) { playerControls.showPauseButton(); }
         }
     }
 

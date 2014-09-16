@@ -8,18 +8,17 @@ import java.io.OutputStream;
 
 import android.util.Log;
 
-import com.example.sockettest.JsonIdSerializer;
 import com.example.sockettest.network.Message.OutputMessage;
+import com.example.sockettest.network.Serializer;
 import com.google.gson.JsonElement;
 
 public class PublishClientId extends OutputMessage {
-    private static final JsonIdSerializer ID_SERIALIZER = new JsonIdSerializer();
-    private static final String IDENTIFIER = "SendClientId";
+    private static final String IDENTIFIER = "PublishClientId";
 
     private final JsonElement clientId;
 
     public PublishClientId(final String clientIdString) {
-        this.clientId = ID_SERIALIZER.serialize(clientIdString, null, null);
+        this.clientId = Serializer.serializeId(clientIdString);
     }
 
     @Override
