@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.example.sockettest.Device;
 import com.example.sockettest.R;
+import com.example.sockettest.music.Source;
 import com.example.sockettest.network.Message;
 import com.example.sockettest.network.NetworkLayer;
 import com.example.sockettest.ui.LibraryView;
@@ -18,16 +19,13 @@ public class Client extends Device {
     private NetworkLayer network;
 
     public Client() {
-    	super(null);
+        super(null);
     }
 
     @Override
-    public boolean enqueueSong(final int position, final boolean fromSearch) {
-        boolean enqueued = false;
-        
+    public boolean enqueueSong(final Source source, final int position) {
         // TODO Send song to Server across network
-        
-        return enqueued;
+        return false;
     }
 
     @Override
@@ -53,39 +51,32 @@ public class Client extends Device {
 
     // TODO need to support streaming
     public final boolean pause() {
-    	
-    	// TODO send message to Server to pause accross network
-    	
+        // TODO send message to Server to pause accross network
         return true;
     }
 
     // TODO need to support streaming
     public final boolean play() {
         
-    	// TODO send message to Server to play accross network
-    	
+        // TODO send message to Server to play accross network
         return true;
     }
 
-    public final boolean play(final int index, final boolean fromSearch) {
-        
-    	// TODO send message to Server to play accross network
-    	
+    public final boolean play(final Source source, final int index) {
+        // TODO send message to Server to play accross network
         return true;
     }
 
     public final boolean previous() {
-        
-    	// TODO send message to Server to previous across network
-    	
+        // TODO send message to Server to previous across network
         return false;
     }
 
-	@Override
-	public boolean next() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean next() {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
     @Override
     public void publishMessage(Message message) {
@@ -96,6 +87,5 @@ public class Client extends Device {
     @Override
     public void receiveMessage(Message message) {
         // TODO Auto-generated method stub
-        
     }
 }
