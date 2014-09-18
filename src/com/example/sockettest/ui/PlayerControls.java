@@ -55,7 +55,6 @@ public class PlayerControls {
         public void onClick(final View v) {
             Log.d(tag(v), "Pause clicked");
             device.pause();
-            showPlayButton();
         }
     }
 
@@ -63,7 +62,7 @@ public class PlayerControls {
         @Override
         public void onClick(final View v) {
             Log.d(tag(v), "Play clicked");
-            if (device.play()) { showPauseButton(); }
+            device.play();
         }
     }
 
