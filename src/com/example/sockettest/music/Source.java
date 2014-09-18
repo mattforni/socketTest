@@ -6,36 +6,39 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class Source {
+public enum Source {
+    LIBRARY, PLAYLIST, SEARCH;
+
     private final List<Song> songs = Lists.newArrayList();
 
-    public final void add(final Song song) {
+    public final synchronized void add(final Song song) {
         songs.add(song);
     }
 
-    public final void add(final Collection<Song> songs) {
+    public final synchronized void add(final Collection<Song> songs) {
         this.songs.addAll(songs);
     }
 
-    public final ImmutableList<Song> all() {
+    public final synchronized ImmutableList<Song> all() {
         return ImmutableList.copyOf(songs);
     }
 
-    public final void clear() {
+    public final synchronized void clear() {
         songs.clear();
     }
 
-    public final Song get(final int index) throws UnknownSongException {
+    public final synchronized Song get(final int index) throws UnknownSongException {
         if (index < 0 || index >= songs.size()) { throw new UnknownSongException(index); }
         return songs.get(index);
     }
 
-    public final int numSongs() {
+    public final synchronized int numSongs() {
         return songs.size();
     }
 
-    public enum Type {
-        LIBRARY, PLAYLIST;
+    public final synchronized void update(final List<Song> songs) {
+        clear();
+        add(songs);
     }
 
     @SuppressWarnings("serial")
