@@ -4,9 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemLongClickListener;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -14,14 +11,14 @@ import android.widget.TextView;
 import com.example.sockettest.Device;
 import com.example.sockettest.R;
 import com.example.sockettest.music.Song;
+import com.example.sockettest.music.Source;
+import com.example.sockettest.ui.listener.EnqueueClickListener;
+import com.example.sockettest.ui.listener.PlayClickListener;
 import com.example.sockettest.utils.Songs;
+import com.example.sockettest.utils.UI;
 import com.google.common.collect.Lists;
 
 public class LibraryView {
-    private final String[] ADAPTER_FROM = new String[] {Song.TITLE_KEY, Song.ARTIST_KEY};
-    private final int ADAPTER_RESOURCE = R.layout.list_item;
-    private final int[] ADAPTER_TO = new int[] {R.id.list_item_title, R.id.list_item_artist};
-
     private final Device device;
     private final ListView libraryView, searchView;
     private final List<Map<String, String>> libraryList, searchList;
@@ -34,8 +31,8 @@ public class LibraryView {
 
         this.libraryList = Lists.newArrayList();
         this.searchList = Lists.newArrayList();
-        this.libraryAdapter = createAdapter(libraryList);
-        this.searchAdapter = createAdapter(searchList);
+        this.libraryAdapter = UI.createSongListAdapter(device, libraryList);
+        this.searchAdapter = UI.createSongListAdapter(device, searchList);
 
         this.libraryView = (ListView)device.findViewById(R.id.library_view);
         this.libraryView.setAdapter(libraryAdapter);
@@ -51,15 +48,19 @@ public class LibraryView {
         this.playerControls = device.isServer() ? new PlayerControls(device) : null;
         new SearchBar(device, this);
 
-        libraryView.setOnItemClickListener(new PlayClickListener(false));
-        libraryView.setOnItemLongClickListener(new EnqueueClickListener(false));
+        libraryView.setOnItemClickListener(new PlayClickListener(device, Source.LIBRARY));
+        libraryView.setOnItemLongClickListener(new EnqueueClickListener(device, Source.LIBRARY));
 
-        searchView.setOnItemClickListener(new PlayClickListener(true));
-        searchView.setOnItemLongClickListener(new EnqueueClickListener(true));
+        searchView.setOnItemClickListener(new PlayClickListener(device, Source.SEARCH));
+        searchView.setOnItemLongClickListener(new EnqueueClickListener(device, Source.SEARCH));
     }
 
     public final void showPauseButton() {
         if (playerControls != null) { playerControls.showPauseButton(); }
+    }
+
+    public final void showPlayButton() {
+        if (playerControls != null) { playerControls.showPlayButton(); }
     }
 
     public final void showSearch(final String query) {
@@ -88,35 +89,5 @@ public class LibraryView {
         libraryList.clear();
         libraryList.addAll(Songs.toListOfMaps(library));
         libraryAdapter.notifyDataSetChanged();
-    }
-
-    private SimpleAdapter createAdapter(final List<Map<String, String>> list) {
-        return new SimpleAdapter(device, list, ADAPTER_RESOURCE, ADAPTER_FROM, ADAPTER_TO);
-    }
-
-    private class PlayClickListener implements OnItemClickListener {
-        private final boolean fromSearch;
-
-        public PlayClickListener(final boolean fromSearch) {
-            this.fromSearch = fromSearch;
-        }
-
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-            device.play(position, fromSearch);
-        }
-    }
-
-    private class EnqueueClickListener implements OnItemLongClickListener {
-        private final boolean fromSearch;
-
-        public EnqueueClickListener(final boolean fromSearch) {
-            this.fromSearch = fromSearch;
-        }
-
-        @Override
-        public boolean onItemLongClick(AdapterView<?> adapterView, View view, int position, long id) {
-            return device.enqueueSong(position, fromSearch);
-        }
     }
 }

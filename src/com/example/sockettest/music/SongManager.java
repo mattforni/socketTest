@@ -11,6 +11,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
+import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 
@@ -18,9 +20,10 @@ import android.os.Environment;
 import android.util.Log;
 
 import com.example.sockettest.Device;
+import com.example.sockettest.music.Song.Format;
 import com.example.sockettest.music.Song.M4ASong;
 import com.example.sockettest.music.Song.MP3Song;
-import com.example.sockettest.music.Song.Type;
+import com.example.sockettest.music.Source.UnknownSongException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -29,41 +32,53 @@ public class SongManager {
     private static final String[] EXTENSIONS = new String[] {"mp3", "MP3", "m4a", "M4A"};
     private static final String LIBRARY_DIR = EXTERNAL_PATH + "/Delta";
     private static final File LIBRARY_FILE = new File(LIBRARY_DIR, "local_songs.txt");
+    private static final Random RANDOM = new Random();
 
     private final Device device;
-    private final List<Song> allSongs, localSongs, playlist;
+    private final List<Song> localSongs;
+    private int currentIndex;
+    private boolean shuffle;
 
     public SongManager(final Device device) {
         this.device = device;
-
-        this.allSongs = Lists.newArrayListWithExpectedSize(127);
         this.localSongs = Lists.newArrayListWithExpectedSize(127);
-        this.playlist = Lists.newArrayListWithExpectedSize(127);
+
+        this.currentIndex = -1;
+
+        this.shuffle = false;
+    }
+
+    public final int current() {
+        return currentIndex;
     }
 
     public final void enqueue(final Song song) {
-        playlist.add(song);
+        Source.PLAYLIST.add(song);
     }
 
     public final ImmutableList<Song> getAllSongs() {
-        return ImmutableList.copyOf(allSongs);
-    }
-
-    public final ImmutableList<Song> getLocalSongs() {
-        return ImmutableList.copyOf(localSongs);
+        return Source.LIBRARY.all();
     }
 
     public final ImmutableList<Song> getPlaylist() {
-        return ImmutableList.copyOf(playlist);
+        return Source.PLAYLIST.all();
     }
 
-    public final Song getSong(final int index) throws UnknownSongException {
-        if (index < 0 || index >= allSongs.size()) { throw new UnknownSongException(index); }
-        return allSongs.get(index);
+    public final ImmutableList<Song> getSearchResults() {
+        return Source.SEARCH.all();
+    }
+
+    public final Song getSong(final Source source, final int index) throws UnknownSongException {
+        return source.get(index);
     }
 
     public final boolean isEmpty() {
-        return allSongs.isEmpty();
+        return Source.LIBRARY.numSongs() == 0;
+    }
+
+    public final boolean isPlaying(final Source source, final int index) {
+        // TODO will need to integrate source
+        return currentIndex == index;
     }
 
     public final void loadLibrary() throws IOException {
@@ -75,12 +90,29 @@ public class SongManager {
         }
     }
 
-    public final int numSongs() {
-        return allSongs.size();
+    public final int next() {
+        if (isEmpty()) { return -1; }
+        final int numSongs = Source.LIBRARY.numSongs();
+        if (shuffle) {
+            currentIndex = RANDOM.nextInt(numSongs);
+        } else {
+            currentIndex = (currentIndex + 1) >= numSongs ? 0 : currentIndex + 1;
+        }
+        return currentIndex;
     }
 
-    public final void updateLibrary(final List<Song> songs) {
-        allSongs.addAll(songs);
+    public final int numSongs() {
+        return Source.LIBRARY.numSongs();
+    }
+
+    public final List<Song> search(final String query) {
+        Source.SEARCH.clear();
+        for (final Song song : Source.LIBRARY.all()) {
+            final String artist = song.getArtist().toLowerCase(Locale.ENGLISH);
+            final String title = song.getTitle().toLowerCase(Locale.ENGLISH);
+            if (artist.contains(query) || title.contains(query)) { Source.SEARCH.add(song); }
+        }
+        return getSearchResults();
     }
 
     private void loadLibraryFile() throws IOException {
@@ -94,10 +126,10 @@ public class SongManager {
             final int size = Integer.parseInt(reader.readLine());
             for(int i = 0; i < size; i++) {
                 String path = reader.readLine();
-                Type type = Type.valueOf(reader.readLine());
+                Format format = Format.valueOf(reader.readLine());
                 String title = reader.readLine();
                 String artist = reader.readLine();
-                switch (type) {
+                switch (format) {
                     case MP3:
                         newSongs.add(new MP3Song(owner, path, artist, title));
                         break;
@@ -106,9 +138,8 @@ public class SongManager {
                         break;
                 }
             }
-
-            allSongs.clear();
-            allSongs.addAll(newSongs);
+            Source.LIBRARY.clear();
+            Source.LIBRARY.add(newSongs);
         } catch (FileNotFoundException e) {
             throw new IOException("Library file does not exist", e);
         } catch (NumberFormatException e) {
@@ -129,7 +160,7 @@ public class SongManager {
                 continue;
             }
         }
-        allSongs.addAll(localSongs);
+        Source.LIBRARY.add(localSongs);
     }
 
     private class LibraryWriter extends Thread {
@@ -156,7 +187,7 @@ public class SongManager {
                 writer.write(format("%d\n", localSongs.size()));
                 for (final Song song : localSongs) {
                     writer.write(format("%s\n", song.getPath()));
-                    writer.write(format("%s\n", song.getType()));
+                    writer.write(format("%s\n", song.getFormat()));
                     writer.write(format("%s\n", song.getTitle()));
                     writer.write(format("%s\n", song.getArtist()));
                 }
@@ -173,15 +204,6 @@ public class SongManager {
                     }
                 }
             }
-        }
-    }
-
-    @SuppressWarnings("serial")
-    public static class UnknownSongException extends IllegalArgumentException {
-        private static final String ERROR_FORMAT = "Unable to find song with index %d";
-
-        public UnknownSongException(final int index) {
-            super(String.format(ERROR_FORMAT, index));
         }
     }
 }

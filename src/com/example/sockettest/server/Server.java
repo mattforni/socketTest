@@ -4,7 +4,6 @@ import static com.example.sockettest.utils.Logger.tag;
 import static java.lang.String.format;
 
 import java.io.IOException;
-import java.util.Random;
 
 import android.content.Intent;
 import android.media.MediaPlayer;
@@ -14,7 +13,8 @@ import android.util.Log;
 import com.example.sockettest.Device;
 import com.example.sockettest.R;
 import com.example.sockettest.music.Song;
-import com.example.sockettest.music.SongManager.UnknownSongException;
+import com.example.sockettest.music.Source;
+import com.example.sockettest.music.Source.UnknownSongException;
 import com.example.sockettest.network.Message;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.PlaylistView;
@@ -23,7 +23,6 @@ public class Server extends Device {
     private static final String DEFAULT_ADDRESS = "0.0.0.0";
     private static final int DEFAULT_PORT = 8080;
     private static final String ID = "SERVER";
-    private static final Random RANDOM = new Random();
 
     private final ClientManager clientManager;
     private final MediaPlayer player;
@@ -36,10 +35,10 @@ public class Server extends Device {
     }
 
     @Override
-    public boolean enqueueSong(final int position, final boolean fromSearch) {
+    public boolean enqueueSong(final Source source, final int position) {
         boolean enqueued = false;
         try {
-            songManager.enqueue(getSong(position, fromSearch));
+            songManager.enqueue(source.get(position));
             playlistView.updatePlaylist(songManager.getPlaylist());
             // TODO notify clients of the update
             enqueued = true;
@@ -74,31 +73,45 @@ public class Server extends Device {
         }
     }
 
-    // TODO need to support playlists and streaming as well
     public final boolean next() {
-        return playSong(getNext(), false);
+        // TODO implements to support types as well
+        return false;
     }
 
     // TODO need to support streaming
     public final boolean pause() {
+        if (!player.isPlaying()) { return false; }
         player.pause();
-        playing = false;
-        Log.i(tag(this), "Player is paused");
+        libraryView.showPlayButton();
+        Log.i(tag(this), "Playback is paused");
         return true;
     }
 
     // TODO need to support streaming
     public final boolean play() {
-        if (currentIndex < 0) { return next(); }
-        player.start();
-        playing = true;
-        libraryView.showPauseButton();
-        Log.i(tag(this), "Player is playing");
-        return true;
+        if (player.isPlaying()) { return false; }
+        boolean playing = false;
+        if (songManager.current() == -1) {
+            final int index = songManager.next();
+            if (index > -1) { playing = playSong(Source.LIBRARY, index); }
+        } else {
+            player.start();
+            playing = true;
+            Log.i(tag(this), "Playback has resumed");
+        }
+        if (playing) {
+            libraryView.showPauseButton();
+        }
+        return playing;
     }
 
-    public final boolean play(final int index, final boolean fromSearch) {
-        return playSong(index, fromSearch);
+    public final boolean play(final Source source, final int index) {
+        if (songManager.isPlaying(source, index)) { return false; }
+        final boolean playing = playSong(source, index);
+        if (playing) {
+            libraryView.showPauseButton();
+        }
+        return playing;
     }
 
     public final boolean previous() {
@@ -116,18 +129,6 @@ public class Server extends Device {
         // TODO Auto-generated method stub
     }
 
-    private int getNext() {
-        if (songManager.isEmpty()) { return -1; }
-        if (nextIndex > -1) { return nextIndex; }
-        final int numSongs = songManager.numSongs();
-        if (shuffle) {
-            nextIndex = RANDOM.nextInt(numSongs);
-        } else {
-            nextIndex = (currentIndex + 1) >= numSongs ? 0 : currentIndex + 1;
-        }
-        return nextIndex;
-    }
-
     private MediaPlayer initializePlayer() {
         final MediaPlayer player = new MediaPlayer();
         player.reset();
@@ -138,19 +139,16 @@ public class Server extends Device {
     }
 
     // TODO need to support streaming
-    private boolean playSong(final int index, final boolean fromSearch) {
-        // If the provided index is current index nothing should be done
-        if (index == currentIndex) { return false; }
+    private boolean playSong(final Source source, final int index) {
+        // TODO If the provided index is current index nothing should be done
         try {
-            final Song song = getSong(index, fromSearch);
+            final Song song = getSong(source, index);
             libraryView.updateCurrentSong(song);
             if(song.isLocal(this)) {
                 player.reset();
                 player.setDataSource(song.getPath());
                 player.prepare();
                 player.start();
-                currentIndex = index;
-                nextIndex = -1;
                 Log.i(tag(this), format("Playing: %s", song.getPath()));
                 return true;
             }

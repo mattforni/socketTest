@@ -3,7 +3,6 @@ package com.example.sockettest.music;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.io.FilenameUtils;
@@ -35,15 +34,15 @@ public abstract class Song {
     private static final String UNKNOWN_ARTIST = "unknown artist";
 
     protected final String owner, path, artist, title;
-    protected final Type type;
+    protected final Format format;
 
     protected Song(final String owner, final String path,
-            final String artist, final String title, final Type type) {
+            final String artist, final String title, final Format format) {
         this.owner = owner;
         this.path = path;
         this.artist = artist;
         this.title = title;
-        this.type = type;
+        this.format = format;
     }
 
     public final String getArtist() {
@@ -58,8 +57,8 @@ public abstract class Song {
         return title;
     }
 
-    public final Type getType() {
-        return type;
+    public final Format getFormat() {
+        return format;
     }
 
     public final boolean isLocal(final Device device) {
@@ -75,9 +74,9 @@ public abstract class Song {
 
     public static Song parse(final Device device, final File file) throws CannotReadException,
             IOException, TagException, ReadOnlyFileException, InvalidAudioFrameException {
-        if (Type.MP3.isType(file)) { // MP3 file handling
+        if (Format.MP3.isType(file)) { // MP3 file handling
             return MP3Song.parse(device, file);
-        } else if (Type.M4A.isType(file)) { // M4A file handling
+        } else if (Format.M4A.isType(file)) { // M4A file handling
             return M4ASong.parse(device, file);
         } else {
             return null;
@@ -89,7 +88,7 @@ public abstract class Song {
         final String path = json.get(PATH_KEY).getAsString();
         final String artist = json.get(ARTIST_KEY).getAsString();
         final String title = json.get(TITLE_KEY).getAsString();
-        final Type type = Type.valueOf(json.get(TYPE_KEY).getAsString());
+        final Format type = Format.valueOf(json.get(TYPE_KEY).getAsString());
         switch (type) {
             case MP3:
                 return new MP3Song(owner, path, artist, title);
@@ -100,13 +99,13 @@ public abstract class Song {
         }
     }
 
-    public static enum Type {
+    public static enum Format {
         MP3 (Lists.newArrayList("mp3", "MP3")),
         M4A (Lists.newArrayList("m4a", "M4A"));
 
         private final List<String> extensions;
 
-        private Type(final List<String> extensions) {
+        private Format(final List<String> extensions) {
             this.extensions = extensions;
         }
 
@@ -125,7 +124,7 @@ public abstract class Song {
     public static class MP3Song extends Song {
         public MP3Song(final String owner, final String path,
                 final String artist, final String title) {
-            super(owner, path, artist, title, Type.MP3);
+            super(owner, path, artist, title, Format.MP3);
         }
 
         public static final Song parse(final Device device, final File file) throws CannotReadException,
@@ -147,7 +146,7 @@ public abstract class Song {
     public static class M4ASong extends Song {
         public M4ASong(final String owner, final String path,
                 final String artist, final String title) {
-            super(owner, path, artist, title, Type.M4A);
+            super(owner, path, artist, title, Format.M4A);
         }
 
         public static final Song parse(final Device device, final File file) throws CannotReadException,
