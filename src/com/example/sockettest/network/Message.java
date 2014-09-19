@@ -1,5 +1,7 @@
 package com.example.sockettest.network;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,20 +35,34 @@ public abstract class Message {
             return (char) BUFFER[0];
         }
 
-        public static final InputMessage getMessage(final byte code) {
+        public static final InputMessage getMessage(final byte code) throws UnknownMessage {
             switch(code) {
-                case 0:
-                    return new ReceiveClientId();
                 case 1:
+                    return new ReceiveClientId();
+                case 2:
                     return new ReceiveLibrary();
                 default:
-                    // TODO probably throw an exception
-                    return null;
+                    throw new UnknownMessage(code);
             }
         }
     }
 
     public static abstract class OutputMessage extends Message {
         public abstract void publish(final OutputStream output);
+    }
+
+    @SuppressWarnings("serial")
+    public static class UnknownMessage extends RuntimeException {
+        final private byte code;
+
+        public UnknownMessage(final byte code) {
+            super(format("UnknownMessage received for status code: %d", code));
+            this.code = code;
+        }
+
+        public final boolean isReset() {
+            if (code == 0) { return true; }
+            return false;
+        }
     }
 }

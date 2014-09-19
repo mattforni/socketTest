@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -14,6 +15,7 @@ import android.util.Log;
 import com.example.sockettest.Device;
 import com.example.sockettest.network.Message.InputMessage;
 import com.example.sockettest.network.Message.OutputMessage;
+import com.example.sockettest.network.Message.UnknownMessage;
 
 public class NetworkLayer {
     private final Device device;
@@ -29,7 +31,7 @@ public class NetworkLayer {
         this.device = device;
         this.socket = socket;
         this.shutdown = false;
-        new Connection().run();
+        new Connection().start();
     }
 
     public NetworkLayer(final Device device, final String address, final int port) {
@@ -37,7 +39,7 @@ public class NetworkLayer {
         this.address = address;
         this.port = port;
         this.shutdown = false;
-        new Connection().run();
+        new Connection().start();
     }
 
     public final void disconnect() {
@@ -54,15 +56,33 @@ public class NetworkLayer {
     }
 
     public final synchronized void receiveMessage(final byte code) {
-        final InputMessage message = InputMessage.getMessage(code);
-        message.receive(input, device);
+        try {
+            final InputMessage message = InputMessage.getMessage(code);
+            message.receive(input, device);
+        } catch (UnknownMessage e) {
+            if (e.isReset()) { reset(); }
+        }
+    }
+
+    public final synchronized void reset() {
+        try {
+            socket.close();
+            new Connection().start();
+        } catch (IOException e) {
+            Log.e(tag(this), "Unable to reset connection");
+        }
     }
 
     private class Connection extends Thread {
         @Override
         public void run() {
             try {
-                if (socket == null) { socket = new Socket(address, port); }
+                if (socket == null) {
+                    socket = new Socket();
+                    socket.setKeepAlive(true);
+                    socket.connect(new InetSocketAddress(address, port), 0);
+                }
+
                 input = socket.getInputStream();
                 output = socket.getOutputStream();
 

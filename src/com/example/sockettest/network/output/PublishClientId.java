@@ -30,7 +30,7 @@ public class PublishClientId extends OutputMessage {
             output.write(0);
             output.write(clientId.toString().getBytes());
             output.write('\0');
-            Log.i(tag(this), format("Client id sent to %s", clientId));
+            Log.i(tag(this), format("Publishing client id %s", clientId));
         } catch (IOException e) {
             handleException(e);
         }

@@ -67,6 +67,7 @@ public class Server extends Device {
             this.libraryView.updateLibrary(songManager.getAllSongs());
 
             this.playlistView = new PlaylistView(this);
+            Log.i(tag(this), "Server successfully initialized");
         } catch (IOException e) {
             Log.e(tag(this), "Unable to initialize server");
             System.exit(1);

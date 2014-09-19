@@ -1,10 +1,10 @@
 ## SocketTest
 
 ### Status Codes
-- 0 - ReceiveClientId
-- 1 - ReceiveLibrary
-- 2 - ReceivePlaylistUpdate
-- 3 - ReceiveStateUpdate
-- 4 - ReceiveStream
-- 5 - ReceiveDisconnect
+- 1 - ReceiveClientId
+- 2 - ReceiveLibrary
+- 3 - ReceivePlaylistUpdate
+- 4 - ReceiveStateUpdate
+- 5 - ReceiveStream
+- 6 - ReceiveDisconnect
 

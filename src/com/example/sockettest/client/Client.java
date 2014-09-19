@@ -29,7 +29,7 @@ public class Client extends Device {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public final void onCreate(Bundle savedInstanceState) {
         try {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.client_view);
@@ -47,6 +47,12 @@ public class Client extends Device {
             Log.e(tag(this), "Unable to initialize client", e);
             System.exit(1);
         }
+    }
+
+    @Override
+    public final void onDestroy() {
+        network.disconnect();
+        super.onDestroy();
     }
 
     // TODO need to support streaming
