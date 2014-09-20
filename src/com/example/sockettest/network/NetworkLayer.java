@@ -12,9 +12,8 @@ import java.nio.channels.SocketChannel;
 import android.util.Log;
 
 import com.example.sockettest.Device;
-import com.example.sockettest.network.Message.InputMessage;
-import com.example.sockettest.network.Message.OutputMessage;
-import com.example.sockettest.network.Message.UnknownMessage;
+import com.example.sockettest.network.input.InputMessage;
+import com.example.sockettest.network.output.OutputMessage;
 
 public class NetworkLayer {
     private static final ByteBuffer BUFFER = ByteBuffer.allocate(1024);
@@ -41,10 +40,11 @@ public class NetworkLayer {
         new Connection().start();
     }
 
-    public final void disconnect() {
+    public final synchronized void disconnect() {
         try {
             channel.close();
             shutdown = true;
+            Log.i(tag(this), "Client is now disconnected");
         } catch (IOException e) {
             Log.e(tag(this), format("Unable to close I/O"), e);
         }
@@ -56,59 +56,80 @@ public class NetworkLayer {
 
     public final synchronized void reset() {
         try {
-            channel.close();
+            if (channel != null) {
+                channel.close();
+                channel = null;
+            }
             new Connection().start();
         } catch (IOException e) {
-            Log.e(tag(this), "Unable to reset connection");
+            Log.e(tag(this), "Unable to reset connection", e);
+            System.exit(1);
+        }
+    }
+
+    private final synchronized void initializeChannel() {
+        try {
+            channel = SocketChannel.open();
+            channel.socket().setSoTimeout(0);
+            channel.socket().setKeepAlive(true);
+            channel.connect(new InetSocketAddress(address, port));
+            Log.i(tag(this), format("Channel connected to %s:%d", address, port));
+        } catch (UnknownHostException e) {
+            Log.e(tag(this), format("Could not find server at %s:%d", address, port), e);
+            System.exit(1);
+        } catch (IOException e) {
+            Log.e(tag(this), format("Unable to initialize channel on %s:%d", address, port), e);
+            System.exit(1);
         }
     }
 
     private class Connection extends Thread {
         @Override
         public void run() {
-            try {
-                if (channel == null) {
-                    channel = SocketChannel.open(new InetSocketAddress(address, port));
-                    channel.configureBlocking(true);
-                }
-
-                // Begin listening on the input stream
-                new InputListener().start();
-            } catch (UnknownHostException e) {
-                Log.e(tag(this), format("Could not find server at %s:%d", address, port));
-                System.exit(1);
-            } catch (IOException e) {
-                Log.e(tag(this), format("Unable to initialize network on %s:%d", address, port));
-                System.exit(1);
-            }
+            if (channel == null) { initializeChannel(); }
+            new InputListener().start();
         }
     }
 
     private class InputListener extends Thread {
         @Override
         public void run() {
+            boolean reset = false;
             while(!shutdown) {
                 try {
-                    InputMessage.getMessage(readCode()).receive(channel, device);
-                } catch (UnknownMessage e) {
-                    if (e.isReset()) {
-                        reset();
-                        continue;
+                    final StringBuilder data = new StringBuilder();
+                    BUFFER.clear();
+
+                    while (channel.read(BUFFER) > 0) {
+                        final int remaining = BUFFER.remaining();
+
+                        BUFFER.flip();
+                        for (int i = 0; i < BUFFER.limit(); i++) {
+                            data.append((char)BUFFER.get());
+                        }
+
+                        // The entire message has been read
+                        if (remaining > 0) { break; }
+                        BUFFER.clear();
                     }
-                    Log.e(tag(this), e.getMessage());
+
+                    if (data.length() > 0) {
+                        Log.i(tag(this), format("Received %s", data.toString()));
+                        InputMessage.getMessage(data.toString()).receive(device);
+                    }
+                } catch (IOException e) {
+                    final String message = e.getMessage();
+                    if (message.contains("Connection reset by peer") ||
+                            message.contains("Connection timed out")) {
+                        reset = true;
+                        Log.i(tag(this), "Connection has expired");
+                        break;
+                    }
+                    Log.e(tag(this), "Unable to read message", e);
+                    disconnect();
                 }
             }
-        }
-
-        private int readCode() {
-            try {
-                channel.read(BUFFER);
-            } catch (IOException e) {
-                Log.e(tag(this), format("Unable to read code"), e);
-            }
-            int code = BUFFER.getInt();
-            BUFFER.clear();
-            return code;
+            if (reset) { reset(); }
         }
     }
 }

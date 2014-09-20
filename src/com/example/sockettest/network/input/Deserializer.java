@@ -1,6 +1,6 @@
-package com.example.sockettest.network;
+package com.example.sockettest.network.input;
 
-import static com.example.sockettest.network.Serializer.ID_KEY;
+import static com.example.sockettest.network.output.Serializer.ID_KEY;
 import static java.lang.String.format;
 import android.util.Log;
 
@@ -9,12 +9,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public abstract class Deserializer {
-    public static final String parseId(final JsonElement serializedId) {
+    public static final String clientId(final JsonObject data) {
         try {
-            final JsonObject jsonObject = serializedId.getAsJsonObject();
-            return jsonObject.get(ID_KEY).getAsString();
+            return data.get(ID_KEY).getAsString();
         } catch (IllegalStateException e) {
-            Log.w("Deserializer", format("Unable to parse id from %s", serializedId));
+            Log.w("Deserializer", format("Unable to parse id from %s", data));
         }
         return null;
     }
