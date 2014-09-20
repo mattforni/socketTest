@@ -4,7 +4,8 @@ import static com.example.sockettest.utils.Logger.tag;
 import static java.lang.String.format;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 import android.util.Log;
 
@@ -13,6 +14,7 @@ import com.example.sockettest.network.Serializer;
 import com.google.gson.JsonElement;
 
 public class PublishClientId extends OutputMessage {
+    private static final ByteBuffer CODE_BUFFER = ByteBuffer.allocate(4).putInt(1);
     private static final String IDENTIFIER = "PublishClientId";
 
     private final JsonElement clientId;
@@ -25,11 +27,11 @@ public class PublishClientId extends OutputMessage {
     public final String getIdentifier() { return IDENTIFIER; }
 
     @Override
-    public final void publish(final OutputStream output) {
+    public final void publish(final SocketChannel channel) {
         try {
-            output.write(0);
-            output.write(clientId.toString().getBytes());
-            output.write('\0');
+            channel.write(CODE_BUFFER);
+            channel.write(ByteBuffer.wrap(clientId.toString().getBytes()));
+            channel.write(END_BUFFER);
             Log.i(tag(this), format("Publishing client id %s", clientId));
         } catch (IOException e) {
             handleException(e);

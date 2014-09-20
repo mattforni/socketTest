@@ -4,11 +4,10 @@ import static com.example.sockettest.utils.Logger.tag;
 import static java.lang.String.format;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 import android.util.Log;
 
@@ -18,18 +17,18 @@ import com.example.sockettest.network.Message.OutputMessage;
 import com.example.sockettest.network.Message.UnknownMessage;
 
 public class NetworkLayer {
+    private static final ByteBuffer BUFFER = ByteBuffer.allocate(1024);
+
     private final Device device;
 
     private String address;
-    private InputStream input;
-    private OutputStream output;
     private int port;
-    private Socket socket;
+    private SocketChannel channel;
     private boolean shutdown;
 
-    public NetworkLayer(final Device device, final Socket socket) {
+    public NetworkLayer(final Device device, final SocketChannel channel) {
         this.device = device;
-        this.socket = socket;
+        this.channel = channel;
         this.shutdown = false;
         new Connection().start();
     }
@@ -44,7 +43,7 @@ public class NetworkLayer {
 
     public final void disconnect() {
         try {
-            socket.close();
+            channel.close();
             shutdown = true;
         } catch (IOException e) {
             Log.e(tag(this), format("Unable to close I/O"), e);
@@ -52,21 +51,12 @@ public class NetworkLayer {
     }
 
     public final synchronized void publishMessage(final OutputMessage message) {
-        message.publish(output);
-    }
-
-    public final synchronized void receiveMessage(final byte code) {
-        try {
-            final InputMessage message = InputMessage.getMessage(code);
-            message.receive(input, device);
-        } catch (UnknownMessage e) {
-            if (e.isReset()) { reset(); }
-        }
+        message.publish(channel);
     }
 
     public final synchronized void reset() {
         try {
-            socket.close();
+            channel.close();
             new Connection().start();
         } catch (IOException e) {
             Log.e(tag(this), "Unable to reset connection");
@@ -77,14 +67,10 @@ public class NetworkLayer {
         @Override
         public void run() {
             try {
-                if (socket == null) {
-                    socket = new Socket();
-                    socket.setKeepAlive(true);
-                    socket.connect(new InetSocketAddress(address, port), 0);
+                if (channel == null) {
+                    channel = SocketChannel.open(new InetSocketAddress(address, port));
+                    channel.configureBlocking(true);
                 }
-
-                input = socket.getInputStream();
-                output = socket.getOutputStream();
 
                 // Begin listening on the input stream
                 new InputListener().start();
@@ -102,18 +88,27 @@ public class NetworkLayer {
         @Override
         public void run() {
             while(!shutdown) {
-                receiveMessage(readCode());
+                try {
+                    InputMessage.getMessage(readCode()).receive(channel, device);
+                } catch (UnknownMessage e) {
+                    if (e.isReset()) {
+                        reset();
+                        continue;
+                    }
+                    Log.e(tag(this), e.getMessage());
+                }
             }
         }
 
-        private byte readCode() {
-            final byte[] buffer = new byte[1];
+        private int readCode() {
             try {
-                input.read(buffer);
+                channel.read(BUFFER);
             } catch (IOException e) {
                 Log.e(tag(this), format("Unable to read code"), e);
             }
-            return buffer[0];
+            int code = BUFFER.getInt();
+            BUFFER.clear();
+            return code;
         }
     }
 }

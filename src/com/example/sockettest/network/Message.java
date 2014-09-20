@@ -3,8 +3,8 @@ package com.example.sockettest.network;
 import static java.lang.String.format;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 import android.util.Log;
 
@@ -14,6 +14,8 @@ import com.example.sockettest.network.input.ReceiveLibrary;
 import com.google.gson.JsonParser;
 
 public abstract class Message {
+    protected static final ByteBuffer END_BUFFER = ByteBuffer.allocate(2).putChar('\0');
+
     public abstract String getIdentifier();
 
     protected void handleException(final IOException e) {
@@ -21,21 +23,21 @@ public abstract class Message {
     }
 
     public static abstract class InputMessage extends Message {
-        protected static final byte[] BUFFER = new byte[1];
+        protected static final ByteBuffer BUFFER = ByteBuffer.allocate(1);
         protected static final JsonParser JSON = new JsonParser();
 
-        public abstract void receive(final InputStream input, final Device device);
+        public abstract void receive(final SocketChannel channel, final Device device);
 
-        protected char nextChar(final InputStream input) {
+        protected char nextChar(final SocketChannel channel) {
             try {
-                input.read(BUFFER);
+                channel.read(BUFFER);
             } catch (IOException e) {
                 Log.e(getIdentifier(), "Unable to read input stream", e);
             }
-            return (char) BUFFER[0];
+            return BUFFER.getChar();
         }
 
-        public static final InputMessage getMessage(final byte code) throws UnknownMessage {
+        public static final InputMessage getMessage(final int code) throws UnknownMessage {
             switch(code) {
                 case 1:
                     return new ReceiveClientId();
@@ -48,14 +50,14 @@ public abstract class Message {
     }
 
     public static abstract class OutputMessage extends Message {
-        public abstract void publish(final OutputStream output);
+        public abstract void publish(final SocketChannel channel);
     }
 
     @SuppressWarnings("serial")
     public static class UnknownMessage extends RuntimeException {
-        final private byte code;
+        final private int code;
 
-        public UnknownMessage(final byte code) {
+        public UnknownMessage(final int code) {
             super(format("UnknownMessage received for status code: %d", code));
             this.code = code;
         }

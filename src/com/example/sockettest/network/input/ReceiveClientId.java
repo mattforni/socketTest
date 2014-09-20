@@ -3,7 +3,7 @@ package com.example.sockettest.network.input;
 import static com.example.sockettest.utils.Logger.tag;
 import static java.lang.String.format;
 
-import java.io.InputStream;
+import java.nio.channels.SocketChannel;
 
 import android.util.Log;
 
@@ -18,14 +18,15 @@ public class ReceiveClientId extends InputMessage {
     public String getIdentifier() { return IDENTIFIER; }
 
     @Override
-    public void receive(final InputStream input, final Device device) {
+    public void receive(final SocketChannel channel, final Device device) {
+        // TODO update this to be NIO friendly
         Log.w(tag(this), "Receiving clientId");
 
         final StringBuilder data = new StringBuilder();
-        char currentChar = nextChar(input);
+        char currentChar = nextChar(channel);
         while(currentChar != '\0') {
             data.append(currentChar);
-            currentChar = nextChar(input);
+            currentChar = nextChar(channel);
         }
 
         final String clientId = Deserializer.parseId(JSON.parse(data.toString()));

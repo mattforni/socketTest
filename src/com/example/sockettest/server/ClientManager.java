@@ -5,8 +5,8 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +24,7 @@ public class ClientManager extends Thread {
     private final Server server;
 
     private boolean running;
-    private ServerSocket serverSocket;
+    private ServerSocketChannel serverChannel;
 
     public ClientManager(final Server server) {
         this.server = server;
@@ -34,23 +34,28 @@ public class ClientManager extends Thread {
 
     @Override
     public final void run() {
-        if (serverSocket == null) { Log.w(tag(this), "Try calling start(address, port)"); }
+        if (serverChannel == null) { Log.w(tag(this), "Try calling start(address, port)"); }
         if (running) { return; }
 
-        Log.i(tag(this), format("Listening for clients at: %s", serverSocket.getLocalSocketAddress()));
+        Log.i(tag(this), format("Listening at: %s", serverChannel.socket().getLocalSocketAddress()));
         running = true;
 
         // This is the main loop which waits for and handles incoming connections
         while (!isInterrupted()) {
             try {
                 final String clientId = generateUUID();
-                final Socket socket = serverSocket.accept();
-                socket.setKeepAlive(true);
-                clientMap.put(clientId, new NetworkLayer(server, socket));
+                final SocketChannel channel = serverChannel.accept();
+                clientMap.put(clientId, new NetworkLayer(server, channel));
                 publishMessage(clientId, new PublishClientId(clientId));
                 Log.i(tag(this), format("Accepted new client with ID: %s", clientId));
             } catch (IOException e) {
                 Log.e(tag(this), "Unable to accept a new client", e);
+            } finally {
+                try {
+                    serverChannel.close();
+                } catch (IOException e) {
+                    Log.e(tag(this), "Unable to close server socket channel");
+                }
             }
         }
     }
@@ -69,16 +74,16 @@ public class ClientManager extends Thread {
     }
 
     public final void start(final String address, final int port) throws IOException {
-        serverSocket = initializeSocket(address, port);
+        serverChannel = initializeServerChannel(address, port);
         start();
     }
 
-    private ServerSocket initializeSocket(final String address, final int port) throws IOException {
-        ServerSocket server = new ServerSocket();
-        server.setReuseAddress(true);
-        server.setSoTimeout(0);
-        server.bind(new InetSocketAddress(address, port));
-        return server;
+    private ServerSocketChannel initializeServerChannel(
+            final String address, final int port) throws IOException {
+        ServerSocketChannel channel = ServerSocketChannel.open();
+        channel.configureBlocking(true);
+        channel.socket().bind(new InetSocketAddress(address, port));
+        return channel;
     }
 
     private String generateUUID() {
