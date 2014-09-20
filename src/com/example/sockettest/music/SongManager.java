@@ -81,7 +81,7 @@ public class SongManager {
         return currentIndex == index;
     }
 
-    public final void loadLibrary() throws IOException {
+    public final void loadLibrary() {
         if (!LIBRARY_FILE.exists()) {
             loadLocalMusic();
             new LibraryWriter().start();
@@ -115,7 +115,7 @@ public class SongManager {
         return getSearchResults();
     }
 
-    private void loadLibraryFile() throws IOException {
+    private void loadLibraryFile() {
         Log.i(tag(this), format("Loading music from '%s'", LIBRARY_FILE.getAbsolutePath()));
 
         BufferedReader reader = null;
@@ -141,11 +141,17 @@ public class SongManager {
             Source.LIBRARY.clear();
             Source.LIBRARY.add(newSongs);
         } catch (FileNotFoundException e) {
-            throw new IOException("Library file does not exist", e);
+            Log.e(tag(this), "Library file does not exist", e);
+        } catch (IOException e) {
+            Log.e(tag(this), "Unable to read library file", e);
         } catch (NumberFormatException e) {
-            throw new IOException("Malformed library file", e);
+            Log.e(tag(this), "Malformed library file", e);
         } finally {
-            if (reader != null) { reader.close(); }
+            try {
+                if (reader != null) { reader.close(); }
+            } catch (IOException e) {
+                Log.e(tag(this), "Unable to close reader");
+            }
         }
     }
 

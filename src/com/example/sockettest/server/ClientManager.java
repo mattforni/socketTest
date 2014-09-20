@@ -14,48 +14,43 @@ import java.util.UUID;
 
 import android.util.Log;
 
-import com.example.sockettest.network.Message.OutputMessage;
 import com.example.sockettest.network.NetworkLayer;
+import com.example.sockettest.network.output.OutputMessage;
 import com.example.sockettest.network.output.PublishClientId;
 import com.google.common.collect.Maps;
 
 public class ClientManager extends Thread {
-    private final Map<String, NetworkLayer> clientMap;
     private final Server server;
+    private final Map<String, NetworkLayer> clientMap;
+    private final ServerSocketChannel serverChannel;
 
-    private boolean running;
-    private ServerSocketChannel serverChannel;
 
-    public ClientManager(final Server server) {
+    public ClientManager(final Server server, final String address, final int port) {
         this.server = server;
         this.clientMap = Maps.newLinkedHashMap();
-        this.running = false;
+        this.serverChannel = initializeChannel(address, port);
     }
 
     @Override
     public final void run() {
-        if (serverChannel == null) { Log.w(tag(this), "Try calling start(address, port)"); }
-        if (running) { return; }
-
-        Log.i(tag(this), format("Listening at: %s", serverChannel.socket().getLocalSocketAddress()));
-        running = true;
-
-        // This is the main loop which waits for and handles incoming connections
-        while (!isInterrupted()) {
-            try {
-                final String clientId = generateUUID();
+        try {
+            // This is the main loop which waits for and handles incoming connections
+            while (!isInterrupted()) {
                 final SocketChannel channel = serverChannel.accept();
+                channel.socket().setKeepAlive(true);
+                channel.socket().setSoTimeout(0);
+                final String clientId = generateUUID();
                 clientMap.put(clientId, new NetworkLayer(server, channel));
                 publishMessage(clientId, new PublishClientId(clientId));
                 Log.i(tag(this), format("Accepted new client with ID: %s", clientId));
+            }
+        } catch (IOException e) {
+            Log.e(tag(this), "Unable to accept new clients", e);
+        } finally {
+            try {
+                serverChannel.close();
             } catch (IOException e) {
-                Log.e(tag(this), "Unable to accept a new client", e);
-            } finally {
-                try {
-                    serverChannel.close();
-                } catch (IOException e) {
-                    Log.e(tag(this), "Unable to close server socket channel");
-                }
+                Log.e(tag(this), "Unable to close server channel");
             }
         }
     }
@@ -73,16 +68,17 @@ public class ClientManager extends Thread {
         for (final String clientId : clientIds) { publishMessage(clientId, message); }
     }
 
-    public final void start(final String address, final int port) throws IOException {
-        serverChannel = initializeServerChannel(address, port);
-        start();
-    }
-
-    private ServerSocketChannel initializeServerChannel(
-            final String address, final int port) throws IOException {
-        ServerSocketChannel channel = ServerSocketChannel.open();
-        channel.configureBlocking(true);
-        channel.socket().bind(new InetSocketAddress(address, port));
+    private ServerSocketChannel initializeChannel(final String address, final int port) {
+        ServerSocketChannel channel = null;
+        try {
+            channel = ServerSocketChannel.open();
+            channel.configureBlocking(true);
+            channel.socket().setSoTimeout(0);
+            channel.socket().bind(new InetSocketAddress(address, port));
+        } catch (IOException e) {
+            Log.e(tag(this), "Unable to initialize server channel", e);
+            System.exit(1);
+        }
         return channel;
     }
 
