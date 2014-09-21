@@ -15,7 +15,6 @@ import com.example.sockettest.R;
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.music.Source.UnknownSongException;
-import com.example.sockettest.network.Message;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.PlaylistView;
 
@@ -24,12 +23,10 @@ public class Server extends Device {
     private static final int DEFAULT_PORT = 8080;
     private static final String ID = "SERVER";
 
-    private final ClientManager clientManager;
     private final MediaPlayer player;
 
     public Server() {
         super(ID);
-        this.clientManager = new ClientManager(this);
         this.isServer = true;
         this.player = initializePlayer();
     }
@@ -51,35 +48,33 @@ public class Server extends Device {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        try {
-            super.onCreate(savedInstanceState);
-            setContentView(R.layout.server_view);
-            initializeTabs();
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.server_view);
+        initializeTabs();
 
-            final Intent intent = getIntent();
-            String address = intent.getStringExtra(ADDRESS_KEY);
-            if (address == null) { address = DEFAULT_ADDRESS; }
-            final int port = intent.getIntExtra(PORT_KEY, DEFAULT_PORT);
-            clientManager.start(address, port);
+        final Intent intent = getIntent();
+        String address = intent.getStringExtra(ADDRESS_KEY);
+        if (address == null) { address = DEFAULT_ADDRESS; }
+        final int port = intent.getIntExtra(PORT_KEY, DEFAULT_PORT);
+        new ClientManager(this, address, port).start();
 
-            songManager.loadLibrary();
-            this.libraryView = new LibraryView(this);
-            this.libraryView.updateLibrary(songManager.getAllSongs());
+        songManager.loadLibrary();
+        this.libraryView = new LibraryView(this);
+        this.libraryView.updateLibrary(songManager.getAllSongs());
+        this.playlistView = new PlaylistView(this);
 
-            this.playlistView = new PlaylistView(this);
-        } catch (IOException e) {
-            Log.e(tag(this), "Unable to initialize server");
-            System.exit(1);
-        }
+        Log.i(tag(this), "Server successfully initialized");
     }
 
+    @Override
     public final boolean next() {
         // TODO implements to support types as well
         return false;
     }
 
-    // TODO need to support streaming
+    @Override
     public final boolean pause() {
+        // TODO need to support streaming
         if (!player.isPlaying()) { return false; }
         player.pause();
         libraryView.showPlayButton();
@@ -87,8 +82,9 @@ public class Server extends Device {
         return true;
     }
 
-    // TODO need to support streaming
+    @Override
     public final boolean play() {
+        // TODO need to support streaming
         if (player.isPlaying()) { return false; }
         boolean playing = false;
         if (songManager.current() == -1) {
@@ -105,6 +101,7 @@ public class Server extends Device {
         return playing;
     }
 
+    @Override
     public final boolean play(final Source source, final int index) {
         if (songManager.isPlaying(source, index)) { return false; }
         final boolean playing = playSong(source, index);
@@ -114,20 +111,14 @@ public class Server extends Device {
         return playing;
     }
 
+    @Override
     public final boolean previous() {
         // TODO implement functionality to play previous song
         return false;
     }
 
     @Override
-    public void publishMessage(final Message message) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void receiveMessage(final Message message) {
-        // TODO Auto-generated method stub
-    }
+    public final void setId(final String id) {}
 
     private MediaPlayer initializePlayer() {
         final MediaPlayer player = new MediaPlayer();

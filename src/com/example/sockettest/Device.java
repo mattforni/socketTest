@@ -12,7 +12,6 @@ import com.example.sockettest.music.Song;
 import com.example.sockettest.music.SongManager;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.music.Source.UnknownSongException;
-import com.example.sockettest.network.Message;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.PlaylistView;
 
@@ -20,15 +19,13 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     public static final String ADDRESS_KEY = "ADDRESS";
     public static final String PORT_KEY = "PORT";
 
-    protected Map<String, String> currentSong;
     protected final SongManager songManager;
 
-    // These are the player 'state' variables which should probably be composed
+    protected String id;
     protected boolean isServer;
+    protected Map<String, String> currentSong;
     protected LibraryView libraryView;
     protected PlaylistView playlistView;
-
-    private String id;
 
     protected Device(final String id) {
         this.id = id;
@@ -43,8 +40,7 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     public abstract boolean play();
     public abstract boolean play(Source source, int index);
     public abstract boolean previous();
-    public abstract void publishMessage(Message message);
-    public abstract void receiveMessage(Message message);
+    public abstract void setId(String id);
 
     public final String getId() {
         return id;
@@ -64,10 +60,6 @@ public abstract class Device extends Activity implements OnTabChangeListener {
         } else if(tabId.equals("tab2")){
         } else{
         }
-    }
-
-    public final void setId(final String id) {
-        this.id = id;
     }
 
     public final void updateLibrary(final List<Song> songs) {

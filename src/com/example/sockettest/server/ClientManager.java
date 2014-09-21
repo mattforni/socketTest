@@ -5,8 +5,8 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.SocketAddress;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,40 +15,42 @@ import java.util.UUID;
 import android.util.Log;
 
 import com.example.sockettest.network.NetworkLayer;
-import com.example.sockettest.network.Message.OutputMessage;
+import com.example.sockettest.network.output.OutputMessage;
 import com.example.sockettest.network.output.PublishClientId;
 import com.google.common.collect.Maps;
 
 public class ClientManager extends Thread {
-    private final Map<String, NetworkLayer> clientMap;
     private final Server server;
+    private final Map<String, NetworkLayer> clientMap;
+    private final ServerSocketChannel serverChannel;
 
-    private boolean running;
-    private ServerSocket socket;
 
-    public ClientManager(final Server server) {
+    public ClientManager(final Server server, final String address, final int port) {
         this.server = server;
         this.clientMap = Maps.newLinkedHashMap();
-        this.running = false;
+        this.serverChannel = initializeChannel(address, port);
     }
 
     @Override
     public final void run() {
-        if (socket == null) { Log.w(tag(this), "Try calling start(address, port)"); }
-        if (running) { return; }
-
-        Log.i(tag(this), format("Listening for clients at: %s", socket.getLocalSocketAddress()));
-        running = true;
-
-        // This is the main loop which waits for and handles incoming connections
-        while (!isInterrupted()) {
-            try {
+        try {
+            // This is the main loop which waits for and handles incoming connections
+            while (!isInterrupted()) {
+                final SocketChannel channel = serverChannel.accept();
+                channel.socket().setKeepAlive(true);
+                channel.socket().setSoTimeout(0);
                 final String clientId = generateUUID();
-                clientMap.put(clientId, new NetworkLayer(server, socket.accept()));
+                clientMap.put(clientId, new NetworkLayer(server, channel));
                 publishMessage(clientId, new PublishClientId(clientId));
                 Log.i(tag(this), format("Accepted new client with ID: %s", clientId));
+            }
+        } catch (IOException e) {
+            Log.e(tag(this), "Unable to accept new clients", e);
+        } finally {
+            try {
+                serverChannel.close();
             } catch (IOException e) {
-                Log.e(tag(this), "Unable to accept a new client", e);
+                Log.e(tag(this), "Unable to close server channel");
             }
         }
     }
@@ -66,17 +68,18 @@ public class ClientManager extends Thread {
         for (final String clientId : clientIds) { publishMessage(clientId, message); }
     }
 
-    public final void start(final String address, final int port) throws IOException {
-        socket = initializeSocket(address, port);
-        start();
-    }
-
-    private ServerSocket initializeSocket(final String address, final int port) throws IOException {
-        SocketAddress socketAddress = new InetSocketAddress(address, port);
-        ServerSocket server = new ServerSocket();
-        server.setReuseAddress(true);
-        server.bind(socketAddress);
-        return server;
+    private ServerSocketChannel initializeChannel(final String address, final int port) {
+        ServerSocketChannel channel = null;
+        try {
+            channel = ServerSocketChannel.open();
+            channel.configureBlocking(true);
+            channel.socket().setSoTimeout(0);
+            channel.socket().bind(new InetSocketAddress(address, port));
+        } catch (IOException e) {
+            Log.e(tag(this), "Unable to initialize server channel", e);
+            System.exit(1);
+        }
+        return channel;
     }
 
     private String generateUUID() {

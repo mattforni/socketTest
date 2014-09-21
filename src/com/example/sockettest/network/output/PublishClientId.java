@@ -4,35 +4,29 @@ import static com.example.sockettest.utils.Logger.tag;
 import static java.lang.String.format;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 import android.util.Log;
 
-import com.example.sockettest.network.Message.OutputMessage;
-import com.example.sockettest.network.Serializer;
 import com.google.gson.JsonElement;
 
 public class PublishClientId extends OutputMessage {
-    private static final String IDENTIFIER = "PublishClientId";
+    public static final int CODE = 1;
 
-    private final JsonElement clientId;
+    private final JsonElement message;
 
     public PublishClientId(final String clientIdString) {
-        this.clientId = Serializer.serializeId(clientIdString);
+        this.message = Serializer.publishClientId(clientIdString);
     }
 
     @Override
-    public final String getIdentifier() { return IDENTIFIER; }
-
-    @Override
-    public final void publish(final OutputStream output) {
+    public final void publish(final SocketChannel channel) {
         try {
-            output.write(0);
-            output.write(clientId.toString().getBytes());
-            output.write('\0');
-            Log.i(tag(this), format("Client id sent to %s", clientId));
+            channel.write(ByteBuffer.wrap(message.toString().getBytes()));
+            Log.i(tag(this), format("Publishing client id %s", message));
         } catch (IOException e) {
-            handleException(e);
+            Log.w(tag(this), "Unable to write to channel", e);
         }
     }
 }
