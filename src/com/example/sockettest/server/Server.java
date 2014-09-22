@@ -118,7 +118,9 @@ public class Server extends Device {
     }
 
     @Override
-    public final void setId(final String id) {}
+    public final void receiveClientId(final String id) {
+        // TODO will need a way to update reference from client to network
+    }
 
     private MediaPlayer initializePlayer() {
         final MediaPlayer player = new MediaPlayer();
