@@ -27,7 +27,7 @@ public class SearchBar {
 
         this.button = (ImageButton) device.findViewById(R.id.search_button);
         this.field = (TextView) device.findViewById(R.id.search_box);
-
+        
         button.setOnClickListener(startSearchListener);
     }
 
@@ -39,6 +39,7 @@ public class SearchBar {
             Log.w(tag(this), "Clearing search");
             libraryView.hideSearch();
             field.setText("");
+            field.setEnabled(true);
             button.setImageDrawable(device.getResources().getDrawable(SEARCH_DRAWABLE));
             button.setOnClickListener(startSearchListener);
         }
@@ -52,6 +53,8 @@ public class SearchBar {
             final String query = field.getText().toString();
             Log.w(tag(this), format("Searching for: %s", query));
             libraryView.showSearch(query);
+            field.setEnabled(false);
+            field.setText("searched: "+ query);
             button.setImageDrawable(device.getResources().getDrawable(CLEAR_DRAWABLE));
             button.setOnClickListener(clearSearchListener);
         }

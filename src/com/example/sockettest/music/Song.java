@@ -36,8 +36,7 @@ public abstract class Song {
     protected final String owner, path, artist, title;
     protected final Format format;
 
-    protected Song(final String owner, final String path,
-            final String artist, final String title, final Format format) {
+    protected Song(final String owner, final String path, final String artist, final String title, final Format format) {
         this.owner = owner;
         this.path = path;
         this.artist = artist;
@@ -61,6 +60,10 @@ public abstract class Song {
         return format;
     }
 
+    public final String getOwner() {
+        return owner;
+    }
+    
     public final boolean isLocal(final Device device) {
         return owner.equals(device.getId());
     }
@@ -163,5 +166,16 @@ public abstract class Song {
 
             return new M4ASong(device.getId(), path, artist, title);
         }
+    }
+    
+    public boolean equals(Song song) {
+    	return this.getArtist().equals(song.getArtist())
+    		&& this.getTitle().equals(song.getTitle())
+    		&& this.getPath().equals(song.getPath())
+    		&& this.getFormat().equals(song.getFormat());
+    }
+    
+    public String toString() {
+    	return getTitle() + " - " + getArtist();
     }
 }

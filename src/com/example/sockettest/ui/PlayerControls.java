@@ -10,8 +10,8 @@ import com.example.sockettest.Device;
 import com.example.sockettest.R;
 
 public class PlayerControls {
-    private static final int PAUSE_DRAWABLE = R.drawable.pause_button;
-    private static final int PLAY_DRAWABLE = R.drawable.play_button;
+    private static final int PAUSE_DRAWABLE = R.drawable.button_pause;
+    private static final int PLAY_DRAWABLE = R.drawable.button_play;
 
     private final Device device;
     private final ImageButton nextButton, playButton, previousButton;

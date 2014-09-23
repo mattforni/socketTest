@@ -35,6 +35,10 @@ public enum Source {
     public final synchronized int numSongs() {
         return songs.size();
     }
+    
+    public final synchronized boolean isEmpty() {
+    	return numSongs() == 0;
+    }
 
     public final synchronized void update(final List<Song> songs) {
         clear();

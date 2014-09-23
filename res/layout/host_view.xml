@@ -123,12 +123,13 @@
                             android:layout_height="wrap_content"
                             android:text="HOST: "
                             android:textAppearance="?android:attr/textAppearanceLarge" />
-
+						<!--
                         <Switch
                             android:id="@+id/shuffle_switch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="SHUFFLE MUSIC" />
+                         -->
                     </LinearLayout>
                 </FrameLayout>
             </FrameLayout>
@@ -149,7 +150,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@null"
-            android:src="@drawable/previous_button" />
+            android:src="@drawable/button_previous" />
 
         <ImageButton
             android:id="@+id/play_button"
@@ -157,7 +158,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@null"
-            android:src="@drawable/play_button" />
+            android:src="@drawable/button_play" />
 
         <ImageButton
             android:id="@+id/next_button"
@@ -165,8 +166,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="@null"
-            android:paddingRight="10dp"
-            android:src="@drawable/next_button" />
+            android:src="@drawable/button_next" />
     </LinearLayout>
 
 </RelativeLayout>

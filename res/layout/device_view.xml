@@ -3,8 +3,9 @@
     android:id="@+id/RelativeLayout1"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/black">
+    android:background="@color/black"
+    android:clickable="true"
+    android:orientation="vertical" >
 
     <TextView
         android:id="@+id/current_title"
@@ -67,14 +68,21 @@
 
                     <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent" >
+                        android:layout_height="wrap_content" >
 
                         <EditText
                             android:id="@+id/search_box"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:ems="10" />
+                            android:ems="10"
+                            android:hint="SEARCH"
+                            android:textColor="@color/light_grey"
+                            android:textColorLink="@color/light_grey"
+                            android:textStyle="bold" >
+
+                            <requestFocus />
+                        </EditText>
 
                         <ImageButton
                             android:id="@+id/search_button"
@@ -85,6 +93,7 @@
                             android:paddingBottom="5dp"
                             android:paddingTop="5dp"
                             android:src="@drawable/abc_ic_search_api_holo_light" />
+
                     </LinearLayout>
 
                     <ListView
@@ -92,6 +101,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent" >
                     </ListView>
+
                     <ListView
                         android:id="@+id/search_view"
                         android:layout_width="match_parent"
@@ -126,15 +136,16 @@
                             android:id="@+id/server_location"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/light_grey"
-                            android:textAppearance="?android:attr/textAppearanceLarge" />
-						<!-- Commented out to API issue with switch view
+                            android:textAppearance="?android:attr/textAppearanceLarge"
+                            android:textColor="@color/light_grey" />
+                        <!--
+                        Commented out to API issue with switch view
                         <Switch
                             android:id="@+id/shuffle_switch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="SHUFFLE MUSIC" />
-                         -->
+                        -->
                     </LinearLayout>
                 </FrameLayout>
             </FrameLayout>

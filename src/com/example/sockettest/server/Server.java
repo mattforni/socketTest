@@ -5,9 +5,11 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import com.example.sockettest.Device;
@@ -17,18 +19,25 @@ import com.example.sockettest.music.Source;
 import com.example.sockettest.music.Source.UnknownSongException;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.PlaylistView;
+import com.example.sockettest.ui.SettingsView;
 
 public class Server extends Device {
     private static final String DEFAULT_ADDRESS = "0.0.0.0";
     private static final int DEFAULT_PORT = 8080;
     private static final String ID = "SERVER";
-
+    private static final int ADD_PLAYED_SONG_TIMER = 5000;
+    private static final int WAIT_TIMER = 1000;
+    
+    private ClientManager clientManager;
     private final MediaPlayer player;
+    private final Handler playedSongsHandler;
+    private Runnable addPlayedSongsRunnable;
 
     public Server() {
         super(ID);
         this.isServer = true;
         this.player = initializePlayer();
+        this.playedSongsHandler = new Handler();
     }
 
     @Override
@@ -46,30 +55,34 @@ public class Server extends Device {
         return enqueued;
     }
 
-    @Override
+    @SuppressLint("NewApi")
+	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.server_view);
+        setContentView(R.layout.device_view);
         initializeTabs();
 
+        getActionBar().hide();
+        
         final Intent intent = getIntent();
-        String address = intent.getStringExtra(ADDRESS_KEY);
+        this.address = intent.getStringExtra(ADDRESS_KEY);
         if (address == null) { address = DEFAULT_ADDRESS; }
-        final int port = intent.getIntExtra(PORT_KEY, DEFAULT_PORT);
-        new ClientManager(this, address, port).start();
+        this.port = intent.getIntExtra(PORT_KEY, DEFAULT_PORT);
+        clientManager = new ClientManager(this, address, port);
+        clientManager.start();
 
         songManager.loadLibrary();
         this.libraryView = new LibraryView(this);
         this.libraryView.updateLibrary(songManager.getAllSongs());
         this.playlistView = new PlaylistView(this);
+        this.settingsView = new SettingsView(this);
 
         Log.i(tag(this), "Server successfully initialized");
     }
 
     @Override
     public final boolean next() {
-        // TODO implements to support types as well
-        return false;
+        return play();
     }
 
     @Override
@@ -88,8 +101,8 @@ public class Server extends Device {
         if (player.isPlaying()) { return false; }
         boolean playing = false;
         if (songManager.current() == -1) {
-            final int index = songManager.next();
-            if (index > -1) { playing = playSong(Source.LIBRARY, index); }
+            final Song song = songManager.getNext();
+            if (song != null) { playing = playSong(Source.LIBRARY, song); }
         } else {
             player.start();
             playing = true;
@@ -101,10 +114,9 @@ public class Server extends Device {
         return playing;
     }
 
-    @Override
-    public final boolean play(final Source source, final int index) {
-        if (songManager.isPlaying(source, index)) { return false; }
-        final boolean playing = playSong(source, index);
+    public final boolean play(final Source source, final Song song) {
+        if (songManager.isPlaying(source, song)) { return false; }
+        final boolean playing = playSong(source, song);
         if (playing) {
             libraryView.showPauseButton();
         }
@@ -113,8 +125,7 @@ public class Server extends Device {
 
     @Override
     public final boolean previous() {
-        // TODO implement functionality to play previous song
-        return false;
+        return play(Source.LIBRARY, songManager.getPrevious());
     }
 
     @Override
@@ -130,11 +141,14 @@ public class Server extends Device {
     }
 
     // TODO need to support streaming
-    private boolean playSong(final Source source, final int index) {
+    private boolean playSong(final Source source, final Song song) {
         // TODO If the provided index is current index nothing should be done
+    	
         try {
-            final Song song = getSong(source, index);
             libraryView.updateCurrentSong(song);
+            clientManager.publishCurrentSong(song);
+            preparePlayedSongsHandler(song);
+            
             if(song.isLocal(this)) {
                 player.reset();
                 player.setDataSource(song.getPath());
@@ -150,4 +164,23 @@ public class Server extends Device {
         }
         return false;
     }
+
+	private void preparePlayedSongsHandler(final Song song) {
+		playedSongsHandler.removeCallbacks(addPlayedSongsRunnable);
+        addPlayedSongsRunnable = new Runnable() {
+			@Override
+			public void run() {
+				while(player.getCurrentPosition() < ADD_PLAYED_SONG_TIMER) {
+					try {
+						Thread.sleep(WAIT_TIMER);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				songManager.pushPrevious(song);
+			}
+        };
+        playedSongsHandler.postDelayed(addPlayedSongsRunnable, ADD_PLAYED_SONG_TIMER);
+		
+	}
 }

@@ -35,6 +35,10 @@ public abstract class InputMessage {
         switch(code) {
             case 1:
                 return new ReceiveClientId(Deserializer.clientId(jsonObject));
+            case 2:
+            	return new ReceiveLibrary(Deserializer.parseLibrary(jsonObject));
+            case 4:
+                return new ReceiveCurrentSong(Deserializer.parseSong(jsonObject));
             default:
                 Log.e("InputMessage", format("Unrecognized message code received: %d", code));
                 return null;

@@ -14,20 +14,25 @@ import java.util.UUID;
 
 import android.util.Log;
 
+import com.example.sockettest.music.Song;
 import com.example.sockettest.network.NetworkLayer;
 import com.example.sockettest.network.output.OutputMessage;
 import com.example.sockettest.network.output.PublishClientId;
+import com.example.sockettest.network.output.PublishCurrentSong;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class ClientManager extends Thread {
     private final Server server;
     private final Map<String, NetworkLayer> clientMap;
+    private final List<String> clientList;
     private final ServerSocketChannel serverChannel;
 
 
     public ClientManager(final Server server, final String address, final int port) {
         this.server = server;
         this.clientMap = Maps.newLinkedHashMap();
+        this.clientList = Lists.newArrayList();
         this.serverChannel = initializeChannel(address, port);
     }
 
@@ -41,6 +46,7 @@ public class ClientManager extends Thread {
                 channel.socket().setSoTimeout(0);
                 final String clientId = generateUUID();
                 clientMap.put(clientId, new NetworkLayer(server, channel));
+                clientList.add(clientId);
                 publishMessage(clientId, new PublishClientId(clientId));
                 Log.i(tag(this), format("Accepted new client with ID: %s", clientId));
             }
@@ -55,6 +61,10 @@ public class ClientManager extends Thread {
         }
     }
 
+    public final void publishCurrentSong(Song song) {
+    	publishMessage(clientList, new PublishCurrentSong(song));
+    }
+    
     public final void publishMessage(final String clientId, final OutputMessage message) {
         final NetworkLayer network = clientMap.get(clientId);
         if (network == null) {
