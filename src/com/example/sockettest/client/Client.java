@@ -89,7 +89,8 @@ public class Client extends Device {
         final String oldId = this.id;
         this.id = id;
         if (oldId == null) {
-            network.publishMessage(new PublishLibrary(songManager.getAllSongs()));
+        	// TODO commented out for testing
+            //network.publishMessage(new PublishLibrary(songManager.getAllSongs()));
         } else {
             // TODO send update to server with old client id
         }
