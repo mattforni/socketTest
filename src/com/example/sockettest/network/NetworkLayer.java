@@ -51,7 +51,10 @@ public class NetworkLayer {
     }
 
     public final synchronized void publishMessage(final OutputMessage message) {
-        message.publish(channel);
+        new Thread() {
+            @Override
+            public synchronized void run() { message.publish(channel); }
+        }.start();
     }
 
     public final synchronized void reset() {

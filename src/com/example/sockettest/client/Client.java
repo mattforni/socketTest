@@ -9,6 +9,7 @@ import com.example.sockettest.Device;
 import com.example.sockettest.R;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.network.NetworkLayer;
+import com.example.sockettest.network.output.PublishClientId;
 import com.example.sockettest.ui.LibraryView;
 
 public class Client extends Device {
@@ -72,13 +73,13 @@ public class Client extends Device {
     }
 
     @Override
-    public final void setId(final String id) {
-        final String oldId = this.id;
-        this.id = id;
-        if (oldId == null) {
+    public final void receiveClientId(final String id) {
+        if (this.id == null) {
+            this.id = id;
             // TODO load the library and update the view
         } else {
-            // TODO send update to server with old client id
+            // Alert the server that client ID has already been set
+            network.publishMessage(new PublishClientId(this.id));
         }
     }
 

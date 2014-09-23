@@ -40,7 +40,7 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     public abstract boolean play();
     public abstract boolean play(Source source, int index);
     public abstract boolean previous();
-    public abstract void setId(String id);
+    public abstract void receiveClientId(String id);
 
     public final String getId() {
         return id;
