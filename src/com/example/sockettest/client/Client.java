@@ -12,6 +12,7 @@ import com.example.sockettest.music.Source;
 import com.example.sockettest.network.NetworkLayer;
 import com.example.sockettest.network.output.PublishClientId;
 import com.example.sockettest.network.output.PublishLibrary;
+
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.SettingsView;
 
@@ -92,7 +93,8 @@ public class Client extends Device {
         	// TODO commented out for testing
             //network.publishMessage(new PublishLibrary(songManager.getAllSongs()));
         } else {
-            // TODO send update to server with old client id
+            // Alert the server that client ID has already been set
+            network.publishMessage(new PublishClientId(this.id));
         }
     }
 }

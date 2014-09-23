@@ -16,7 +16,7 @@ public class ReceiveClientId extends InputMessage {
     @Override
     public void receive(final Device device) {
         if (clientId != null) {
-            device.setId(clientId);
+            device.receiveClientId(clientId);
             Log.i(tag(this), format("Client ID received %s", clientId));
         } else {
             Log.e(tag(this), "Tried to set null client ID");
