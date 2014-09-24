@@ -33,10 +33,7 @@ public class Client extends Device {
 	@Override
     public final void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.device_view);
         initializeTabs();
-
-        getActionBar().hide();
         
         final Intent intent = getIntent();
         this.address = intent.getStringExtra(ADDRESS_KEY);
@@ -86,7 +83,7 @@ public class Client extends Device {
     }
     
     @Override
-    public final void setId(final String id) {
+    public final void receiveClientId(final String id) {
         final String oldId = this.id;
         this.id = id;
         if (oldId == null) {

@@ -59,11 +59,8 @@ public class Server extends Device {
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.device_view);
         initializeTabs();
 
-        getActionBar().hide();
-        
         final Intent intent = getIntent();
         this.address = intent.getStringExtra(ADDRESS_KEY);
         if (address == null) { address = DEFAULT_ADDRESS; }

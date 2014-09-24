@@ -2,13 +2,13 @@ package com.example.sockettest;
 
 import java.util.List;
 import java.util.Map;
-
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.os.Bundle;
 import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
-
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.SongManager;
 import com.example.sockettest.music.Source;
@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+@SuppressLint("NewApi")
 public abstract class Device extends Activity implements OnTabChangeListener {
     public static final String ADDRESS_KEY = "ADDRESS";
     public static final String PORT_KEY = "PORT";
@@ -37,11 +38,18 @@ public abstract class Device extends Activity implements OnTabChangeListener {
 
     protected Device(final String id) {
         this.id = id;
-
         this.songManager = new SongManager(this);
         this.isServer = false;
     }
-
+    
+    @SuppressLint("NewApi")
+	@Override
+    public void onCreate(Bundle savedInstanceState) {
+    	super.onCreate(savedInstanceState);
+    	setContentView(R.layout.device_view);
+        getActionBar().hide();
+    }
+    
     public abstract boolean enqueueSong(Source source, int index);
     public abstract boolean next();
     public abstract boolean pause();

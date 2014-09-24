@@ -19,7 +19,9 @@ public class Serializer {
     }
     
     public static final JsonElement publishCurrentSong(final Song currentSong) {
-    	return serializeSong(currentSong);
+    	JsonObject serializedSong = serializeSong(currentSong);
+    	serializedSong.addProperty(CODE_KEY, PublishCurrentSong.CODE);
+    	return serializedSong;
     }
 
 	public static JsonElement publishLibrary(List<Song> library) {
@@ -31,7 +33,7 @@ public class Serializer {
 		return jsonArray;
 	}
 	
-	private static final JsonElement serializeSong(final Song currentSong) {
+	private static final JsonObject serializeSong(final Song currentSong) {
         final JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(Song.TITLE_KEY, currentSong.getTitle());
         jsonObject.addProperty(Song.ARTIST_KEY, currentSong.getArtist());
