@@ -9,6 +9,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,6 +20,7 @@ import com.example.sockettest.network.NetworkLayer;
 import com.example.sockettest.network.output.OutputMessage;
 import com.example.sockettest.network.output.PublishClientId;
 import com.example.sockettest.network.output.PublishCurrentSong;
+import com.example.sockettest.network.output.PublishPlaylist;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -60,12 +62,8 @@ public class ClientManager extends Thread {
             }
         }
     }
-
-    public final void publishCurrentSong(Song song) {
-    	publishMessage(clientList, new PublishCurrentSong(song));
-    }
     
-    public final void publishMessage(final String clientId, final OutputMessage message) {
+    private final void publishMessage(final String clientId, final OutputMessage message) {
         final NetworkLayer network = clientMap.get(clientId);
         if (network == null) {
             Log.e(tag(this), format("Unable to find network for %s", clientId));
@@ -74,8 +72,8 @@ public class ClientManager extends Thread {
         network.publishMessage(message);
     }
 
-    public final void publishMessage(final List<String> clientIds, final OutputMessage message) {
-        for (final String clientId : clientIds) { publishMessage(clientId, message); }
+    public final void publishMessage(final OutputMessage message) {
+        for (final String clientId : clientList) { publishMessage(clientId, message); }
     }
 
     private ServerSocketChannel initializeChannel(final String address, final int port) {

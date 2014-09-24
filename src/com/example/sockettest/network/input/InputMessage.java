@@ -11,6 +11,10 @@ import java.nio.channels.SocketChannel;
 import android.util.Log;
 
 import com.example.sockettest.Device;
+import com.example.sockettest.network.output.PublishClientId;
+import com.example.sockettest.network.output.PublishCurrentSong;
+import com.example.sockettest.network.output.PublishLibrary;
+import com.example.sockettest.network.output.PublishPlaylist;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -33,11 +37,13 @@ public abstract class InputMessage {
         final JsonObject jsonObject = JSON.parse(data).getAsJsonObject();
         final int code = jsonObject.get(CODE_KEY).getAsInt();
         switch(code) {
-            case 1:
+            case PublishClientId.CODE:
                 return new ReceiveClientId(Deserializer.clientId(jsonObject));
-            case 2:
+            case PublishLibrary.CODE:
             	return new ReceiveLibrary(Deserializer.parseLibrary(jsonObject));
-            case 4:
+            case PublishPlaylist.CODE:
+            	return new ReceivePlaylist(Deserializer.parsePlaylist(jsonObject));
+            case PublishCurrentSong.CODE:
                 return new ReceiveCurrentSong(Deserializer.parseSong(jsonObject));
             default:
                 Log.e("InputMessage", format("Unrecognized message code received: %d", code));

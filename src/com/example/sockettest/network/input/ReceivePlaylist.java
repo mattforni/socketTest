@@ -12,21 +12,20 @@ import com.example.sockettest.music.Song;
 import com.example.sockettest.ui.runnable.UpdateCurrentSongRunnable;
 import com.example.sockettest.ui.runnable.UpdateLibraryRunnable;
 
-public class ReceiveLibrary extends InputMessage {
-    private final List<Song> library;
+public class ReceivePlaylist extends InputMessage {
+    private final List<Song> playlist;
 
-    public ReceiveLibrary(final List<Song> library) {
-        this.library = library;
+    public ReceivePlaylist(final List<Song> playlist) {
+        this.playlist = playlist;
     }
 
     @Override
     public void receive(final Device device) {
-        if (library != null) {
-        	device.updateLibrary(library);
-        	// device.runOnUiThread(new UpdateLibraryRunnable(library, device));
-            Log.i(tag(this), format("Updating library"));
+        if (playlist != null) {
+        	device.updatePlaylist(playlist);
+            Log.i(tag(this), format("Updating Playlist"));
         } else {
-            Log.e(tag(this), "Tried to update library");
+            Log.e(tag(this), "Tried to update Playlist");
         }
     }
 }

@@ -2,6 +2,8 @@ package com.example.sockettest;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.os.Bundle;
@@ -9,6 +11,7 @@ import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
 import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
+
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.SongManager;
 import com.example.sockettest.music.Source;
@@ -57,6 +60,8 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     public abstract boolean play(Source source, Song song);
     public abstract boolean previous();
     public abstract void receiveClientId(String id);
+    public abstract void updateLibrary(final List<Song> library);
+    public abstract void updatePlaylist(final List<Song> playlist);
 
     public final String getId() {
         return id;
@@ -76,11 +81,6 @@ public abstract class Device extends Activity implements OnTabChangeListener {
         } else if(tabId.equals("tab2")){
         } else{
         }
-    }
-
-    public final void updateLibrary(final List<Song> songs) {
-        Source.LIBRARY.update(songs);
-        libraryView.updateLibrary(songManager.getAllSongs());
     }
 
     protected final Song getSong(final Source source, final int index) throws UnknownSongException {

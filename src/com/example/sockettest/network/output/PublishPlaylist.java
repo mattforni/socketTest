@@ -13,21 +13,19 @@ import android.util.Log;
 import com.example.sockettest.music.Song;
 import com.google.gson.JsonElement;
 
-public class PublishLibrary extends OutputMessage {
-    public static final int CODE = 2;
+public class PublishPlaylist extends OutputMessage {
+    public static final int CODE = 3;
 
     private final JsonElement message;
 
-    public PublishLibrary(final List<Song> library) {
-        this.message = Serializer.publishLibrary(library);
+    public PublishPlaylist(final List<Song> playlist) {
+        this.message = Serializer.publishPlaylist(playlist);
     }
-
     @Override
     public final void publish(final SocketChannel channel) {
         try {
             channel.write(ByteBuffer.wrap(message.toString().getBytes()));
-            Log.i(tag(this), format("Publishing Library"));
-            Log.i(tag(this), format("Publishing: %d / %d", ByteBuffer.wrap(message.toString().getBytes()).capacity(), message.toString().getBytes().length));
+            Log.i(tag(this), format("Publishing playlist"));
         } catch (IOException e) {
             Log.w(tag(this), "Unable to write to channel", e);
         }
