@@ -1,16 +1,20 @@
 package com.example.sockettest.client;
 
 import static com.example.sockettest.utils.Logger.tag;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-
 import com.example.sockettest.Device;
 import com.example.sockettest.R;
+import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.network.NetworkLayer;
 import com.example.sockettest.network.output.PublishClientId;
+import com.example.sockettest.network.output.PublishLibrary;
+
 import com.example.sockettest.ui.LibraryView;
+import com.example.sockettest.ui.SettingsView;
 
 public class Client extends Device {
     private NetworkLayer network;
@@ -25,20 +29,21 @@ public class Client extends Device {
         return false;
     }
 
-    @Override
+    @SuppressLint("NewApi")
+	@Override
     public final void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.client_view);
         initializeTabs();
-
+        
         final Intent intent = getIntent();
-        final String address = intent.getStringExtra(ADDRESS_KEY);
-        final int port = intent.getIntExtra(PORT_KEY, 0);
+        this.address = intent.getStringExtra(ADDRESS_KEY);
+        this.port = intent.getIntExtra(PORT_KEY, 0);
         this.network = new NetworkLayer(this, address, port);
 
         songManager.loadLibrary();
         this.libraryView = new LibraryView(this);
         this.libraryView.updateLibrary(songManager.getAllSongs());
+        this.settingsView = new SettingsView(this);
 
         Log.i(tag(this), "Client successfully initialized");
     }
@@ -57,12 +62,11 @@ public class Client extends Device {
 
     // TODO need to support streaming
     public final boolean play() {
-        
         // TODO send message to Server to play accross network
         return true;
     }
 
-    public final boolean play(final Source source, final int index) {
+    public final boolean play(final Source source, final Song song) {
         // TODO send message to Server to play accross network
         return true;
     }
@@ -73,19 +77,21 @@ public class Client extends Device {
     }
 
     @Override
+    public boolean next() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    
+    @Override
     public final void receiveClientId(final String id) {
-        if (this.id == null) {
-            this.id = id;
-            // TODO load the library and update the view
+        final String oldId = this.id;
+        this.id = id;
+        if (oldId == null) {
+        	// TODO commented out for testing
+            //network.publishMessage(new PublishLibrary(songManager.getAllSongs()));
         } else {
             // Alert the server that client ID has already been set
             network.publishMessage(new PublishClientId(this.id));
         }
-    }
-
-    @Override
-    public boolean next() {
-        // TODO Auto-generated method stub
-        return false;
     }
 }

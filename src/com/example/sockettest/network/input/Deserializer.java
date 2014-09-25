@@ -2,6 +2,9 @@ package com.example.sockettest.network.input;
 
 import static com.example.sockettest.network.output.Serializer.ID_KEY;
 import static java.lang.String.format;
+
+import java.util.List;
+
 import android.util.Log;
 
 import com.example.sockettest.music.Song;
@@ -26,4 +29,9 @@ public abstract class Deserializer {
         }
         return null;
     }
+
+	public static List<Song> parseLibrary(JsonObject jsonObject) {
+		// TODO Parse library
+		return null;
+	}
 }

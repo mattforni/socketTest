@@ -24,6 +24,7 @@ import com.example.sockettest.music.Song.Format;
 import com.example.sockettest.music.Song.M4ASong;
 import com.example.sockettest.music.Song.MP3Song;
 import com.example.sockettest.music.Source.UnknownSongException;
+import com.example.sockettest.utils.MaxStack;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -33,17 +34,24 @@ public class SongManager {
     private static final String LIBRARY_DIR = EXTERNAL_PATH + "/Delta";
     private static final File LIBRARY_FILE = new File(LIBRARY_DIR, "local_songs.txt");
     private static final Random RANDOM = new Random();
+    private static final int MAX_PLAYED_SONGS = 30;
 
     private final Device device;
     private final List<Song> localSongs;
+    // TODO Make stack that only holds ~30 last played songs
+    private final MaxStack<Song> playedSongs;
     private int currentIndex;
+    private int playlistIndex;
     private boolean shuffle;
 
     public SongManager(final Device device) {
         this.device = device;
         this.localSongs = Lists.newArrayListWithExpectedSize(127);
-
-        this.currentIndex = -1;
+        
+        this.playedSongs = new MaxStack<Song>(MAX_PLAYED_SONGS);
+        
+        this.currentIndex = 0;
+        this.playlistIndex = 0;
 
         this.shuffle = false;
     }
@@ -68,6 +76,48 @@ public class SongManager {
         return Source.SEARCH.all();
     }
 
+    public final Song getNext() {
+    	Song song = null;
+    	
+    	if (isEmpty()) { return song; }
+        
+        if(!Source.PLAYLIST.isEmpty()) {
+        	// TODO "pop" the playlist
+	        song = Source.PLAYLIST.get(playlistIndex);
+	        playlistIndex++;
+        } else {
+        	if (shuffle) {
+	        	currentIndex = RANDOM.nextInt(Source.LIBRARY.numSongs());
+	        	song = Source.LIBRARY.get(currentIndex);
+	        } else {
+	        	song = Source.LIBRARY.get(currentIndex);
+	            currentIndex = (currentIndex + 1) >= Source.LIBRARY.numSongs() ? 0 : currentIndex + 1;
+	        }
+        }
+		return song;
+    }
+    
+    public final Song getPrevious() {
+    	Song song = null;
+    	if(!playedSongs.isEmpty()) {
+    		song = playedSongs.pop();
+    	} else {
+    		if(shuffle) {
+    			currentIndex = RANDOM.nextInt(Source.LIBRARY.numSongs());
+    			song = Source.LIBRARY.get(currentIndex);
+    		} else {
+    			song = Source.LIBRARY.get(currentIndex);
+    			currentIndex = (currentIndex - 1) < 0 ? Source.LIBRARY.numSongs() - 1 : currentIndex - 1;
+    		}
+    	}
+    	return song;
+    }
+    
+    public final void pushPrevious(final Song song) {
+    	Log.i(tag(this), format("Pushing '%s'", song.getTitle()));
+    	playedSongs.push(song);
+    }
+    
     public final Song getSong(final Source source, final int index) throws UnknownSongException {
         return source.get(index);
     }
@@ -76,9 +126,9 @@ public class SongManager {
         return Source.LIBRARY.numSongs() == 0;
     }
 
-    public final boolean isPlaying(final Source source, final int index) {
+    public final boolean isPlaying(final Source source, final Song song) {
         // TODO will need to integrate source
-        return currentIndex == index;
+        return currentIndex >= 0 && Source.LIBRARY.get(currentIndex).equals(song);
     }
 
     public final void loadLibrary() {
@@ -90,27 +140,29 @@ public class SongManager {
         }
     }
 
-    public final int next() {
-        if (isEmpty()) { return -1; }
-        final int numSongs = Source.LIBRARY.numSongs();
-        if (shuffle) {
-            currentIndex = RANDOM.nextInt(numSongs);
-        } else {
-            currentIndex = (currentIndex + 1) >= numSongs ? 0 : currentIndex + 1;
-        }
-        return currentIndex;
-    }
-
     public final int numSongs() {
         return Source.LIBRARY.numSongs();
     }
 
     public final List<Song> search(final String query) {
         Source.SEARCH.clear();
+        final String[] queryFragments = query.toLowerCase(Locale.ENGLISH).split("\\s+");
+        
         for (final Song song : Source.LIBRARY.all()) {
             final String artist = song.getArtist().toLowerCase(Locale.ENGLISH);
             final String title = song.getTitle().toLowerCase(Locale.ENGLISH);
-            if (artist.contains(query) || title.contains(query)) { Source.SEARCH.add(song); }
+            
+            boolean containsAll = true;
+            
+            for(String queryFragment : queryFragments) {
+            	if(!title.contains(queryFragment) && !artist.contains(queryFragment)) {
+            		containsAll = false;
+            		break;
+            	}
+            }
+            if(containsAll) {
+            	Source.SEARCH.add(song);
+            }
         }
         return getSearchResults();
     }

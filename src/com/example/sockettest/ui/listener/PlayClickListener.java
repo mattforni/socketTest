@@ -1,5 +1,8 @@
 package com.example.sockettest.ui.listener;
 
+import static com.example.sockettest.utils.Logger.tag;
+import static java.lang.String.format;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -18,6 +21,7 @@ public class PlayClickListener implements OnItemClickListener {
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-        device.play(source, position);
+    	Log.i(tag(this), format("Clicked on song '%s' with index %d", source.get(position).getTitle(), position));
+        device.play(source, source.get(position));
     }
 }

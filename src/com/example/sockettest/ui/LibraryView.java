@@ -44,7 +44,6 @@ public class LibraryView {
         this.currentArtist = (TextView) device.findViewById(R.id.current_artist);
         this.currentTitle = (TextView) device.findViewById(R.id.current_title);
 
-
         this.playerControls = device.isServer() ? new PlayerControls(device) : null;
         new SearchBar(device, this);
 
@@ -75,6 +74,7 @@ public class LibraryView {
         searchAdapter.notifyDataSetChanged();
         searchView.setVisibility(View.GONE);
         libraryView.setVisibility(View.VISIBLE);
+        searchView.setVisibility(View.GONE);
     }
 
     public final void updateCurrentSong(final Song song) {

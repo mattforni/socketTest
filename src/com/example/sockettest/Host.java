@@ -119,7 +119,7 @@ public class Host extends Activity implements OnTabChangeListener {
 		});
 		
 		initializeTabsSetup();
-		
+		/*
 		shuffleSwitch = (Switch) findViewById(R.id.shuffle_switch);
 		shuffleSwitch.setChecked(false);
 		shuffleSwitch.setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -135,6 +135,7 @@ public class Host extends Activity implements OnTabChangeListener {
 			    }
 			}
 		});
+		*/
 		
 		libraryViewList = songManager.getListViewList();
 		Log.w("HOST","LOADED ALL MUSIC");
@@ -335,7 +336,7 @@ public class Host extends Activity implements OnTabChangeListener {
 						mediaPlayer.pause();
 					}
 					playing = false;
-					playPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.play_button));
+					playPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.button_play));
 				} else {
 					Log.w("HOST","NOT PLAYING");
 					if (streaming) {
@@ -345,7 +346,7 @@ public class Host extends Activity implements OnTabChangeListener {
 						Log.w("HOST","NOT STREAMING");
 						mediaPlayer.start();
 					}
-					playPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.pause_button));
+					playPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.button_pause));
 					playing = true;
 				}
 			}
@@ -408,7 +409,7 @@ public class Host extends Activity implements OnTabChangeListener {
 	}
 	
 	public void playSong(Map<String,String> song) {
-		playPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.pause_button));
+		playPauseButton.setImageDrawable(getResources().getDrawable(R.drawable.button_pause));
 		if(streamSinkThread != null) {
 			streamSinkThread.interrupt();
 			streamSinkThread = null;
