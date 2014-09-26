@@ -16,8 +16,8 @@ import android.util.Log;
 
 import com.example.sockettest.music.Song;
 import com.example.sockettest.network.NetworkLayer;
-import com.example.sockettest.network.output.OutputMessage;
-import com.example.sockettest.network.output.PublishClientId;
+import com.example.sockettest.network.message.ClientIdMessage;
+import com.example.sockettest.network.message.Message;
 import com.example.sockettest.network.output.PublishCurrentSong;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -27,7 +27,6 @@ public class ClientManager extends Thread {
     private final Map<String, NetworkLayer> clientMap;
     private final List<String> clientList;
     private final ServerSocketChannel serverChannel;
-
 
     public ClientManager(final Server server, final String address, final int port) {
         this.server = server;
@@ -47,7 +46,7 @@ public class ClientManager extends Thread {
                 final String clientId = generateUUID();
                 clientMap.put(clientId, new NetworkLayer(server, channel));
                 clientList.add(clientId);
-                publishMessage(clientId, new PublishClientId(clientId));
+                publishMessage(clientId, new ClientIdMessage(clientId, false));
                 Log.i(tag(this), format("Accepted new client with ID: %s", clientId));
             }
         } catch (IOException e) {
@@ -62,10 +61,10 @@ public class ClientManager extends Thread {
     }
 
     public final void publishCurrentSong(Song song) {
-    	publishMessage(clientList, new PublishCurrentSong(song));
+        publishMessage(clientList, new PublishCurrentSong(song));
     }
-    
-    public final void publishMessage(final String clientId, final OutputMessage message) {
+
+    public final void publishMessage(final String clientId, final Message message) {
         final NetworkLayer network = clientMap.get(clientId);
         if (network == null) {
             Log.e(tag(this), format("Unable to find network for %s", clientId));
@@ -74,7 +73,7 @@ public class ClientManager extends Thread {
         network.publishMessage(message);
     }
 
-    public final void publishMessage(final List<String> clientIds, final OutputMessage message) {
+    public final void publishMessage(final List<String> clientIds, final Message message) {
         for (final String clientId : clientIds) { publishMessage(clientId, message); }
     }
 

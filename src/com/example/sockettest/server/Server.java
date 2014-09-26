@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.example.sockettest.Device;
-import com.example.sockettest.R;
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.music.Source.UnknownSongException;
@@ -126,7 +125,7 @@ public class Server extends Device {
     }
 
     @Override
-    public final void receiveClientId(final String id) {
+    public final void receiveClientId(final String id, final boolean reconnect) {
         // TODO will need a way to update reference from client to network
     }
 

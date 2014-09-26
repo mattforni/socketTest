@@ -13,7 +13,7 @@ import android.util.Log;
 
 import com.example.sockettest.Device;
 import com.example.sockettest.network.input.InputMessage;
-import com.example.sockettest.network.output.OutputMessage;
+import com.example.sockettest.network.message.Message;
 
 public class NetworkLayer {
     private static final ByteBuffer BUFFER = ByteBuffer.allocate(1024);
@@ -50,7 +50,7 @@ public class NetworkLayer {
         }
     }
 
-    public final synchronized void publishMessage(final OutputMessage message) {
+    public final synchronized void publishMessage(final Message message) {
         new Thread() {
             @Override
             public synchronized void run() { message.publish(channel); }

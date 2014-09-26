@@ -5,14 +5,12 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+
 import com.example.sockettest.Device;
-import com.example.sockettest.R;
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.network.NetworkLayer;
-import com.example.sockettest.network.output.PublishClientId;
-import com.example.sockettest.network.output.PublishLibrary;
-
+import com.example.sockettest.network.message.ClientIdMessage;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.SettingsView;
 
@@ -83,7 +81,7 @@ public class Client extends Device {
     }
     
     @Override
-    public final void receiveClientId(final String id) {
+    public final void receiveClientId(final String id, final boolean reconnect) {
         final String oldId = this.id;
         this.id = id;
         if (oldId == null) {
@@ -91,7 +89,7 @@ public class Client extends Device {
             //network.publishMessage(new PublishLibrary(songManager.getAllSongs()));
         } else {
             // Alert the server that client ID has already been set
-            network.publishMessage(new PublishClientId(this.id));
+            network.publishMessage(new ClientIdMessage(this.id, true));
         }
     }
 }
