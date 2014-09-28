@@ -14,9 +14,9 @@ import com.example.sockettest.Device;
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.network.NetworkLayer;
-import com.example.sockettest.network.output.PublishClientId;
-import com.example.sockettest.network.output.PublishLibrary;
-import com.example.sockettest.network.output.PublishPlaylist;
+import com.example.sockettest.network.message.ClientIdMessage;
+import com.example.sockettest.network.message.PlaylistMessage;
+import com.example.sockettest.network.message.LibraryMessage;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.PlaylistView;
 import com.example.sockettest.ui.SettingsView;
@@ -33,7 +33,7 @@ public class Client extends Device {
     	// Wrap single song in list and pass to PublishPlayList for uniformity
     	List<Song> wrappedSong = new LinkedList<Song>();
     	wrappedSong.add(Source.LIBRARY.get(position));
-    	network.publishMessage(new PublishPlaylist(wrappedSong));
+    	network.publishMessage(new PlaylistMessage(wrappedSong));
         return false;
     }
 
@@ -58,6 +58,10 @@ public class Client extends Device {
     public final void onDestroy() {
         network.disconnect();
         super.onDestroy();
+    }
+    
+    public final void stream(Song song) {
+    	// TODO send audio data
     }
 
     // TODO need to support streaming
@@ -89,16 +93,16 @@ public class Client extends Device {
     }
     
     @Override
-    public final void receiveClientId(final String id) {
+    public final void receiveClientId(final String id, final boolean reconnect) {
         final String oldId = this.id;
         this.id = id;
         if (oldId == null) {
         	songManager.loadLibrary();
             libraryView.updateLibrary(songManager.getAllSongs());
-            network.publishMessage(new PublishLibrary(songManager.getAllSongs()));
+            network.publishMessage(new LibraryMessage(songManager.getAllSongs()));
         } else {
             // Alert the server that client ID has already been set
-            network.publishMessage(new PublishClientId(this.id));
+            network.publishMessage(new ClientIdMessage(this.id, true));
         }
     }
     

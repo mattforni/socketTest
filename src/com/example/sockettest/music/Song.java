@@ -85,8 +85,18 @@ public abstract class Song {
             return null;
         }
     }
-
-    public static Song parse(final JsonObject json) {
+    
+    public static JsonObject serialize(final Song song) {
+    	final JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty(Song.TITLE_KEY, song.getTitle());
+        jsonObject.addProperty(Song.ARTIST_KEY, song.getArtist());
+        jsonObject.addProperty(Song.OWNER_KEY, song.getOwner());
+        jsonObject.addProperty(Song.PATH_KEY, song.getPath());
+        jsonObject.addProperty(Song.TYPE_KEY, song.getFormat().toString());
+        return jsonObject;
+    }
+    
+    public static Song deserialize(final JsonObject json) {
         final String owner = json.get(OWNER_KEY).getAsString();
         final String path = json.get(PATH_KEY).getAsString();
         final String artist = json.get(ARTIST_KEY).getAsString();

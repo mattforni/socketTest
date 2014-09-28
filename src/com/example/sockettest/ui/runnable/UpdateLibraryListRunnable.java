@@ -9,12 +9,12 @@ import com.example.sockettest.Device;
 import com.example.sockettest.music.Song;
 import com.example.sockettest.utils.Songs;
 
-public class AddToLibraryListRunnable implements Runnable {
+public class UpdateLibraryListRunnable implements Runnable {
 	private final List<Song> library;
 	private final List<Map<String,String>> libraryList;
 	private final SimpleAdapter libraryAdapter;
 	
-	public AddToLibraryListRunnable(List<Song> library, List<Map<String,String>> libraryList, SimpleAdapter libraryAdapter) {
+	public UpdateLibraryListRunnable(List<Song> library, List<Map<String,String>> libraryList, SimpleAdapter libraryAdapter) {
 		this.library = library;
 		this.libraryList = libraryList;
 		this.libraryAdapter = libraryAdapter;

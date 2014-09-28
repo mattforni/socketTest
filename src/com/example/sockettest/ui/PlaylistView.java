@@ -11,8 +11,8 @@ import com.example.sockettest.R;
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.ui.listener.PlayClickListener;
-import com.example.sockettest.ui.runnable.AddToLibraryListRunnable;
-import com.example.sockettest.ui.runnable.AddToPlaylistListRunnable;
+import com.example.sockettest.ui.runnable.UpdateLibraryListRunnable;
+import com.example.sockettest.ui.runnable.UpdatePlaylistListRunnable;
 import com.example.sockettest.utils.Songs;
 import com.example.sockettest.utils.UI;
 import com.google.common.collect.Lists;
@@ -35,6 +35,6 @@ public class PlaylistView {
     }
 
     public final void updatePlaylist(final List<Song> enqueuedSongs) {
-    	device.runOnUiThread(new AddToPlaylistListRunnable(enqueuedSongs, playlistList, playlistAdapter));
+    	device.runOnUiThread(new UpdatePlaylistListRunnable(enqueuedSongs, playlistList, playlistAdapter));
     }
 }

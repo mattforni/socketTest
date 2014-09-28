@@ -2,7 +2,6 @@ package com.example.sockettest;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -19,9 +18,6 @@ import com.example.sockettest.music.Source.UnknownSongException;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.PlaylistView;
 import com.example.sockettest.ui.SettingsView;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 @SuppressLint("NewApi")
 public abstract class Device extends Activity implements OnTabChangeListener {
@@ -59,9 +55,10 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     public abstract boolean play();
     public abstract boolean play(Source source, Song song);
     public abstract boolean previous();
-    public abstract void receiveClientId(String id);
+    public abstract void receiveClientId(String id, boolean reconnect);
     public abstract void updateLibrary(final List<Song> library);
     public abstract void updatePlaylist(final List<Song> playlist);
+    public abstract void stream(final Song song);
 
     public final String getId() {
         return id;

@@ -41,6 +41,7 @@ public class SongManager {
     // TODO Make stack that only holds ~30 last played songs
     private final MaxStack<Song> playedSongs;
     private int currentIndex;
+    private Song currentSong;
     private int playlistIndex;
     private boolean shuffle;
 
@@ -126,7 +127,15 @@ public class SongManager {
     public final Song getSong(final Source source, final int index) throws UnknownSongException {
         return source.get(index);
     }
-
+    
+    public final Song getCurrentSong() {
+    	return currentSong;
+    }
+    
+    public final void setCurrentSong(Song song) {
+    	currentSong = song;
+    }
+    
     public final boolean isEmpty() {
         return Source.LIBRARY.numSongs() == 0;
     }

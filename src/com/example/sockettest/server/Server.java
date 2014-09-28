@@ -14,13 +14,10 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.example.sockettest.Device;
-import com.example.sockettest.R;
 import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.music.Source.UnknownSongException;
-import com.example.sockettest.network.output.PublishCurrentSong;
-import com.example.sockettest.network.output.PublishLibrary;
-import com.example.sockettest.network.output.PublishPlaylist;
+import com.example.sockettest.network.message.StreamMessage;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.PlaylistView;
 import com.example.sockettest.ui.SettingsView;
@@ -50,7 +47,7 @@ public class Server extends Device {
         try {
             songManager.enqueue(source.get(position));
             playlistView.updatePlaylist(songManager.getPlaylist());
-            clientManager.publishMessage(new PublishPlaylist(songManager.getPlaylist()));
+            clientManager.publishPlaylist(songManager.getPlaylist());
             enqueued = true;
             Log.w(tag(this), format("Enqueued song: %d", position));
         } catch (UnknownSongException e) {
@@ -130,7 +127,7 @@ public class Server extends Device {
     }
 
     @Override
-    public final void receiveClientId(final String id) {
+    public final void receiveClientId(final String id, final boolean reconnect) {
         // TODO will need a way to update reference from client to network
     }
 
@@ -149,7 +146,8 @@ public class Server extends Device {
     	
         try {
             libraryView.updateCurrentSong(song);
-            clientManager.publishMessage(new PublishCurrentSong(song));
+            clientManager.publishCurrentSong(song);
+            songManager.setCurrentSong(song);
             preparePlayedSongsHandler(song);
             
             if(song.isLocal(this)) {
@@ -159,6 +157,9 @@ public class Server extends Device {
                 player.start();
                 Log.i(tag(this), format("Playing: %s", song.getPath()));
                 return true;
+            } else {
+            	clientManager.publishMessage(song.getOwner(), new StreamMessage(song));
+            	return true;
             }
         } catch (UnknownSongException e) {
             Log.e(tag(this),"Unknown song selected for playback", e);
@@ -168,17 +169,29 @@ public class Server extends Device {
         return false;
     }
 
+    public final void stream(Song song) {
+    	// TODO format and play audio data
+    }
+    
+    public Song getCurrentSong() {
+    	return songManager.getCurrentSong();
+    }
+    
+    public List<Song> getPlaylist() {
+    	return songManager.getPlaylist();
+    }
+    
     public final void updateLibrary(final List<Song> songs) {
         Source.LIBRARY.append(songs);
         libraryView.updateLibrary(songManager.getAllSongs());
         // TODO CRASHES ONLY BECAUSE LENGTH OF LIBRARY IS TOO LONG AT THE MOMENT
-        // clientManager.publishMessage(new PublishLibrary(songManager.getAllSongs()));
+        clientManager.publishLibrary(songManager.getAllSongs());
     }
     
     public final void updatePlaylist(List<Song> playlist) {
     	songManager.enqueue(playlist);
         playlistView.updatePlaylist(songManager.getPlaylist());
-        clientManager.publishMessage(new PublishPlaylist(songManager.getPlaylist()));
+        clientManager.publishPlaylist(songManager.getPlaylist());
 	}
     
 	private void preparePlayedSongsHandler(final Song song) {
