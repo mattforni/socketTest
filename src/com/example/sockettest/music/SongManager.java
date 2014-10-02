@@ -41,6 +41,7 @@ public class SongManager {
     // TODO Make stack that only holds ~30 last played songs
     private final MaxStack<Song> playedSongs;
     private int currentIndex;
+    private Song currentSong;
     private int playlistIndex;
     private boolean shuffle;
 
@@ -63,6 +64,12 @@ public class SongManager {
     public final void enqueue(final Song song) {
         Source.PLAYLIST.add(song);
     }
+    
+    public final void enqueue(final List<Song> songs) {
+        for(Song song : songs) {
+        	enqueue(song);
+        }
+    }
 
     public final ImmutableList<Song> getAllSongs() {
         return Source.LIBRARY.all();
@@ -83,8 +90,7 @@ public class SongManager {
         
         if(!Source.PLAYLIST.isEmpty()) {
         	// TODO "pop" the playlist
-	        song = Source.PLAYLIST.get(playlistIndex);
-	        playlistIndex++;
+	        song = Source.PLAYLIST.get(playlistIndex++);
         } else {
         	if (shuffle) {
 	        	currentIndex = RANDOM.nextInt(Source.LIBRARY.numSongs());
@@ -121,7 +127,15 @@ public class SongManager {
     public final Song getSong(final Source source, final int index) throws UnknownSongException {
         return source.get(index);
     }
-
+    
+    public final Song getCurrentSong() {
+    	return currentSong;
+    }
+    
+    public final void setCurrentSong(Song song) {
+    	currentSong = song;
+    }
+    
     public final boolean isEmpty() {
         return Source.LIBRARY.numSongs() == 0;
     }
@@ -175,6 +189,7 @@ public class SongManager {
             final List<Song> newSongs = Lists.newLinkedList();
             reader = new BufferedReader(new FileReader(LIBRARY_FILE));
             final String owner = device.getId();
+
             final int size = Integer.parseInt(reader.readLine());
             for(int i = 0; i < size; i++) {
                 String path = reader.readLine();

@@ -37,11 +37,15 @@ public enum Source {
     }
     
     public final synchronized boolean isEmpty() {
-    	return numSongs() == 0;
+    	return songs.isEmpty();
     }
 
     public final synchronized void update(final List<Song> songs) {
         clear();
+        add(songs);
+    }
+    
+    public final synchronized void append(final List<Song> songs) {
         add(songs);
     }
 
