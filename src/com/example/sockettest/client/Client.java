@@ -15,8 +15,8 @@ import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.network.NetworkLayer;
 import com.example.sockettest.network.message.ClientIdMessage;
-import com.example.sockettest.network.message.PlaylistMessage;
 import com.example.sockettest.network.message.LibraryMessage;
+import com.example.sockettest.network.message.PlaylistMessage;
 import com.example.sockettest.ui.LibraryView;
 import com.example.sockettest.ui.PlaylistView;
 import com.example.sockettest.ui.SettingsView;
@@ -30,15 +30,15 @@ public class Client extends Device {
 
     @Override
     public boolean enqueueSong(final Source source, final int position) {
-    	// Wrap single song in list and pass to PublishPlayList for uniformity
-    	List<Song> wrappedSong = new LinkedList<Song>();
-    	wrappedSong.add(Source.LIBRARY.get(position));
-    	network.publishMessage(new PlaylistMessage(wrappedSong));
+        // Wrap single song in list and pass to PublishPlayList for uniformity
+        List<Song> wrappedSong = new LinkedList<Song>();
+        wrappedSong.add(Source.LIBRARY.get(position));
+        network.publishMessage(new PlaylistMessage(wrappedSong));
         return false;
     }
 
     @SuppressLint("NewApi")
-	@Override
+    @Override
     public final void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initializeTabs();
@@ -59,9 +59,9 @@ public class Client extends Device {
         network.disconnect();
         super.onDestroy();
     }
-    
+
     public final void stream(Song song) {
-    	// TODO send audio data
+        // TODO send audio data
     }
 
     // TODO need to support streaming
@@ -91,13 +91,13 @@ public class Client extends Device {
         // TODO Auto-generated method stub
         return false;
     }
-    
+
     @Override
     public final void receiveClientId(final String id, final boolean reconnect) {
         final String oldId = this.id;
         this.id = id;
         if (oldId == null) {
-        	songManager.loadLibrary();
+            songManager.loadLibrary();
             libraryView.updateLibrary(songManager.getAllSongs());
             network.publishMessage(new LibraryMessage(songManager.getAllSongs()));
         } else {
@@ -112,12 +112,12 @@ public class Client extends Device {
     }
     
     public final void updatePlaylist(List<Song> playlist) {
-    	Source.PLAYLIST.update(playlist);
-    	if(songManager.getPlaylist() == null) {
-    		Log.i(tag(this), "PLAYLIST IS NULL");
-    	}
-    	else {
-    		playlistView.updatePlaylist(songManager.getPlaylist());
-    	}
-	}
+        Source.PLAYLIST.update(playlist);
+        if(songManager.getPlaylist() == null) {
+            Log.i(tag(this), "PLAYLIST IS NULL");
+        }
+        else {
+            playlistView.updatePlaylist(songManager.getPlaylist());
+        }
+    }
 }

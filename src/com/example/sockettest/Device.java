@@ -40,12 +40,12 @@ public abstract class Device extends Activity implements OnTabChangeListener {
         this.songManager = new SongManager(this);
         this.isServer = false;
     }
-    
+
     @SuppressLint("NewApi")
-	@Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
-    	super.onCreate(savedInstanceState);
-    	setContentView(R.layout.device_view);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.device_view);
         getActionBar().hide();
     }
     
@@ -56,6 +56,7 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     public abstract boolean play(Source source, Song song);
     public abstract boolean previous();
     public abstract void receiveClientId(String id, boolean reconnect);
+
     public abstract void updateLibrary(final List<Song> library);
     public abstract void updatePlaylist(final List<Song> playlist);
     public abstract void stream(final Song song);
@@ -69,7 +70,7 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     }
 
     public final boolean isServer() {
-    	return isServer;
+        return isServer;
     }
 
     @Override
@@ -106,16 +107,16 @@ public abstract class Device extends Activity implements OnTabChangeListener {
         updateTabs(tabs);
         
         tabs.setOnTabChangedListener(new OnTabChangeListener() {
-        	public void onTabChanged(String tabId) {
-        		updateTabs(tabs);
+            public void onTabChanged(String tabId) {
+                updateTabs(tabs);
             }
         });
     }
     
     private void updateTabs(TabHost tabs) {
         for (int i = 0; i < tabs.getTabWidget().getChildCount(); i++) {
-        	tabs.getTabWidget().getChildAt(i).setBackgroundColor(getResources().getColor(R.color.black));
-        	((TextView) tabs.getTabWidget().getChildAt(i).findViewById(android.R.id.title)).setTextColor(getResources().getColor(R.color.light_grey));
+            tabs.getTabWidget().getChildAt(i).setBackgroundColor(getResources().getColor(R.color.black));
+            ((TextView) tabs.getTabWidget().getChildAt(i).findViewById(android.R.id.title)).setTextColor(getResources().getColor(R.color.light_grey));
         }
         
         tabs.getTabWidget().getChildAt(tabs.getCurrentTab()).setBackgroundColor(getResources().getColor(R.color.light_grey));
@@ -123,12 +124,12 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     }
     
     public int getPort() {
-    	return port;
+        return port;
     }
     public String getAddress() {
-    	return address;
+        return address;
     }
-	public void updateCurrentSong(Song song) {
-		libraryView.updateCurrentSong(song);
-	}
+    public void updateCurrentSong(Song song) {
+        libraryView.updateCurrentSong(song);
+    }
 }

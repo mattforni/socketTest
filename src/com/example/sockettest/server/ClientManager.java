@@ -21,19 +21,16 @@ import com.example.sockettest.network.message.CurrentSongMessage;
 import com.example.sockettest.network.message.LibraryMessage;
 import com.example.sockettest.network.message.Message;
 import com.example.sockettest.network.message.PlaylistMessage;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 public class ClientManager extends Thread {
     private final Server server;
     private final Map<String, NetworkLayer> clientMap;
-    private final List<String> clientList;
     private final ServerSocketChannel serverChannel;
 
     public ClientManager(final Server server, final String address, final int port) {
         this.server = server;
         this.clientMap = Maps.newLinkedHashMap();
-        this.clientList = Lists.newArrayList();
         this.serverChannel = initializeChannel(address, port);
     }
 
@@ -47,9 +44,8 @@ public class ClientManager extends Thread {
                 channel.socket().setSoTimeout(0);
                 final String clientId = generateUUID();
                 clientMap.put(clientId, new NetworkLayer(server, channel));
-                clientList.add(clientId);
                 publishMessage(clientId, new ClientIdMessage(clientId, false));
-                //initializeClient(clientId);
+                initializeClient(clientId);
                 Log.i(tag(this), format("Accepted new client with ID: %s", clientId));
             }
         } catch (IOException e) {
@@ -62,15 +58,15 @@ public class ClientManager extends Thread {
             }
         }
     }
-    
-    private synchronized void initializeClient(String clientId) {
-    	if (server.getCurrentSong() != null)
-    		publishMessage(clientId, new CurrentSongMessage(server.getCurrentSong()));
-    	if (!server.getPlaylist().isEmpty())
-    		publishMessage(clientId, new PlaylistMessage(server.getPlaylist()));
-	}
 
-	public final void publishCurrentSong(Song song) {
+    private synchronized void initializeClient(String clientId) {
+        if (server.getCurrentSong() != null)
+            publishMessage(clientId, new CurrentSongMessage(server.getCurrentSong()));
+        if (!server.getPlaylist().isEmpty())
+            publishMessage(clientId, new PlaylistMessage(server.getPlaylist()));
+    }
+
+    public final void publishCurrentSong(Song song) {
         publishMessage(new CurrentSongMessage(song));
     }
     
@@ -81,7 +77,7 @@ public class ClientManager extends Thread {
     public final void publishPlaylist(List<Song> playlist) {
         publishMessage(new PlaylistMessage(playlist));
     }
-    
+
     public final void publishMessage(final String clientId, final Message message) {
         final NetworkLayer network = clientMap.get(clientId);
         if (network == null) {
@@ -92,7 +88,7 @@ public class ClientManager extends Thread {
     }
 
     public final void publishMessage(final Message message) {
-        for (final String clientId : clientList) { publishMessage(clientId, message); }
+        for (final String clientId : clientMap.keySet()) { publishMessage(clientId, message); }
     }
 
     private ServerSocketChannel initializeChannel(final String address, final int port) {
