@@ -5,36 +5,36 @@
     android:versionCode="1"
     android:versionName="1.0" >
 
-    <uses-sdk
-        android:minSdkVersion="10"
-        android:targetSdkVersion="19" />
+    <uses-sdk android:minSdkVersion="10" android:targetSdkVersion="19" />
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-   
-	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-    <application
-        android:allowBackup="true"
-        android:icon="@drawable/ic_launcher"
-        android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+    <application android:allowBackup="true"
+            android:icon="@drawable/ic_launcher"
+            android:label="@string/app_name"
+            android:theme="@style/AppTheme" >
+        <uses-library android:name="android.test.runner" />
         <activity
-            android:name="com.example.sockettest.MainActivity"
-            android:label="@string/app_name" >
+                android:name="com.example.sockettest.MainActivity"
+                android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-				<action android:name="android.intent.action.SPLASH" /> 
+                <action android:name="android.intent.action.SPLASH" /> 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.example.sockettest.Host" android:screenOrientation="portrait" />
+        <activity android:name="com.example.sockettest.Host"
+                android:screenOrientation="portrait" />
         <activity android:name="com.example.sockettest.client.Client"
-            	  android:screenOrientation="portrait"
-            	  android:windowSoftInputMode="adjustPan"/>
+                android:screenOrientation="portrait"
+                android:windowSoftInputMode="adjustPan"/>
         <activity android:name="com.example.sockettest.server.Server"
-            	  android:screenOrientation="portrait"
-            	  android:windowSoftInputMode="adjustPan"/>
+                android:screenOrientation="portrait"
+                android:windowSoftInputMode="adjustPan"/>
+        <instrumentation android:name="android.test.InstrumentationTestRunner"
+                android:targetPackage="com.example.sockettest.network.message.tst"
+                android:label="Networking Tests" />
     </application>
-
 </manifest>

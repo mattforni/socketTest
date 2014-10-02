@@ -10,6 +10,9 @@
 # Java class files
 *.class
 
+# Log files
+*.log
+
 # Generated files
 bin/
 gen/
