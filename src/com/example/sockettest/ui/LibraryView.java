@@ -14,6 +14,8 @@ import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 import com.example.sockettest.ui.listener.EnqueueClickListener;
 import com.example.sockettest.ui.listener.PlayClickListener;
+import com.example.sockettest.ui.runnable.UpdateCurrentSongRunnable;
+import com.example.sockettest.ui.runnable.UpdateLibraryListRunnable;
 import com.example.sockettest.utils.Songs;
 import com.example.sockettest.utils.UI;
 import com.google.common.collect.Lists;
@@ -74,20 +76,13 @@ public class LibraryView {
         searchAdapter.notifyDataSetChanged();
         searchView.setVisibility(View.GONE);
         libraryView.setVisibility(View.VISIBLE);
-        searchView.setVisibility(View.GONE);
     }
 
     public final void updateCurrentSong(final Song song) {
-        currentArtist.setText(song.getArtist());
-        currentTitle.setText(song.getTitle());
-
-        currentArtist.setSelected(true);
-        currentTitle.setSelected(true);
+    	device.runOnUiThread(new UpdateCurrentSongRunnable(song,device));
     }
-
+    
     public final void updateLibrary(final List<Song> library) {
-        libraryList.clear();
-        libraryList.addAll(Songs.toListOfMaps(library));
-        libraryAdapter.notifyDataSetChanged();
+    	device.runOnUiThread(new UpdateLibraryListRunnable(library, libraryList, libraryAdapter));
     }
 }

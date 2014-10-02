@@ -12,7 +12,6 @@ import java.nio.channels.SocketChannel;
 import android.util.Log;
 
 import com.example.sockettest.Device;
-import com.example.sockettest.network.input.InputMessage;
 import com.example.sockettest.network.message.Message;
 
 public class NetworkLayer {
@@ -118,7 +117,7 @@ public class NetworkLayer {
 
                     if (data.length() > 0) {
                         Log.i(tag(this), format("Received %s", data.toString()));
-                        InputMessage.getMessage(data.toString()).receive(device);
+                        Message.getMessage(data.toString()).receive(device);
                     }
                 } catch (IOException e) {
                     final String message = e.getMessage();

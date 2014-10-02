@@ -10,9 +10,6 @@ import java.nio.channels.SocketChannel;
 import android.util.Log;
 
 import com.example.sockettest.Device;
-import com.example.sockettest.network.input.Deserializer;
-import com.example.sockettest.network.input.ReceiveCurrentSong;
-import com.example.sockettest.network.input.ReceiveLibrary;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -39,12 +36,14 @@ public abstract class Message {
         final JsonObject jsonObject = JSON.parse(data).getAsJsonObject();
         final int code = jsonObject.get(CODE_KEY).getAsInt();
         switch(code) {
-            case 1:
+            case ClientIdMessage.CODE:
                 return ClientIdMessage.deserialize(jsonObject);
-            case 2:
-            	return new ReceiveLibrary(Deserializer.parseLibrary(jsonObject));
-            case 4:
-                return new ReceiveCurrentSong(Deserializer.parseSong(jsonObject));
+            case LibraryMessage.CODE:
+            	return LibraryMessage.deserialize(jsonObject);
+            case PlaylistMessage.CODE:
+                return PlaylistMessage.deserialize(jsonObject);
+            case CurrentSongMessage.CODE:
+                return CurrentSongMessage.deserialize(jsonObject);
             default:
                 Log.e(tag(Message.class), format("Unrecognized message code received: %d", code));
                 return null;
