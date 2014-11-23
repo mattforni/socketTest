@@ -117,7 +117,9 @@ public class NetworkLayer {
 
                     if (data.length() > 0) {
                         Log.i(tag(this), format("Received %s", data.toString()));
-                        Message.getMessage(data.toString()).receive(device);
+                        for (final Message message : Message.deserialize(data.toString())) {
+                            message.receive(device);
+                        }
                     }
                 } catch (IOException e) {
                     final String message = e.getMessage();
