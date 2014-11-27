@@ -49,25 +49,25 @@ public class LibraryMessage extends Message {
     }
 
     public final String serialize() {
-    	JsonObject serializedPlaylist = new JsonObject();
-		serializedPlaylist.addProperty(CODE_KEY, CODE);
-		
-		final JsonArray serializedSongs = new JsonArray();
-		for(Song song : library) {
-			serializedSongs.add(Song.serialize(song));
-		}
-		
-		serializedPlaylist.add(LIBRARY_KEY, serializedSongs);
-		return serializedPlaylist.toString();
+        JsonObject serializedPlaylist = new JsonObject();
+        serializedPlaylist.addProperty(CODE_KEY, CODE);
+
+        final JsonArray serializedSongs = new JsonArray();
+        for(Song song : library) {
+            serializedSongs.add(Song.serialize(song));
+        }
+
+        serializedPlaylist.add(LIBRARY_KEY, serializedSongs);
+        return serializedPlaylist.toString();
     }
 
     public final static LibraryMessage deserialize(final JsonObject data) {
-    	final List<Song> library = new LinkedList<Song>();
-		JsonArray serializedSongs = data.get(LIBRARY_KEY).getAsJsonArray();
-		for(int i = 0; i < serializedSongs.size(); i++) {
-			library.add(Song.deserialize(serializedSongs.get(i).getAsJsonObject()));
-		}
-    	try {
+        final List<Song> library = new LinkedList<Song>();
+        JsonArray serializedSongs = data.get(LIBRARY_KEY).getAsJsonArray();
+        for(int i = 0; i < serializedSongs.size(); i++) {
+            library.add(Song.deserialize(serializedSongs.get(i).getAsJsonObject()));
+        }
+        try {
             return new LibraryMessage(library);
         } catch (IllegalStateException e) {
             Log.w(tag(LibraryMessage.class), format("Unable to parse playlist data"));

@@ -100,19 +100,12 @@ public class NetworkLayer {
             while(!shutdown) {
                 try {
                     final StringBuilder data = new StringBuilder();
-                    BUFFER.clear();
+                    BUFFER.clear(); // Make sure the buffer is in the initial state.
 
-                    while (channel.read(BUFFER) > 0) {
-                        final int remaining = BUFFER.remaining();
-
-                        BUFFER.flip();
-                        for (int i = 0; i < BUFFER.limit(); i++) {
-                            data.append((char)BUFFER.get());
-                        }
-
-                        // The entire message has been read
-                        if (remaining > 0) { break; }
-                        BUFFER.clear();
+                    while (channel.read(BUFFER) > -1) { // EOM when .read() return -1.
+                        BUFFER.flip(); // Flip to prepare the buffer for reading.
+                        while (BUFFER.hasRemaining()) { data.append((char)BUFFER.get()); }
+                        BUFFER.clear(); // Clear the buffer to receive more data.
                     }
 
                     if (data.length() > 0) {
