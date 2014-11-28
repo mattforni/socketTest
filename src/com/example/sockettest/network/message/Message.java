@@ -33,14 +33,18 @@ public abstract class Message {
             final JsonObject jsonObject = PARSER.parse(message).getAsJsonObject();
             final int code = jsonObject.get(CODE_KEY).getAsInt();
             switch(code) {
-                case ClientIdMessage.CODE:
+                case ClientIdMessage.CODE: // 1
                     messages.add(ClientIdMessage.deserialize(jsonObject));
-                case LibraryMessage.CODE:
+                    break;
+                case LibraryMessage.CODE: // 2
                     messages.add(LibraryMessage.deserialize(jsonObject));
-                case PlaylistMessage.CODE:
+                    break;
+                case PlaylistMessage.CODE: // 3
                     messages.add(PlaylistMessage.deserialize(jsonObject));
-                case CurrentSongMessage.CODE:
+                    break;
+                case CurrentSongMessage.CODE: // 4
                     messages.add(CurrentSongMessage.deserialize(jsonObject));
+                    break;
                 default:
                     Log.e(tag(Message.class), format("Unrecognized Code: %d", code));
             }

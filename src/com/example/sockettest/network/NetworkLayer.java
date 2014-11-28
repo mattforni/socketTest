@@ -72,7 +72,7 @@ public class NetworkLayer {
     private final synchronized void initializeChannel() {
         try {
             channel = SocketChannel.open();
-            channel.socket().setSoTimeout(0);
+            channel.socket().setSoTimeout(3000);
             channel.socket().setKeepAlive(true);
             channel.connect(new InetSocketAddress(address, port));
             Log.i(tag(this), format("Channel connected to %s:%d", address, port));
@@ -102,9 +102,11 @@ public class NetworkLayer {
                     final StringBuilder data = new StringBuilder();
                     BUFFER.clear(); // Make sure the buffer is in the initial state.
 
-                    while (channel.read(BUFFER) > -1) { // EOM when .read() return -1.
+                    while (channel.read(BUFFER) > 0) {
                         BUFFER.flip(); // Flip to prepare the buffer for reading.
                         while (BUFFER.hasRemaining()) { data.append((char)BUFFER.get()); }
+                        // If buffer is not full break from the read loop as there is no more data.
+                        if (BUFFER.limit() < BUFFER.capacity()) { break; }
                         BUFFER.clear(); // Clear the buffer to receive more data.
                     }
 

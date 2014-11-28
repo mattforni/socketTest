@@ -21,7 +21,7 @@ public class PlayClickListener implements OnItemClickListener {
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-    	Log.i(tag(this), format("Clicked on song '%s' with index %d", source.get(position).getTitle(), position));
+        Log.i(tag(this), format("Clicked on song '%s' with index %d", source.get(position).getTitle(), position));
         device.play(source, source.get(position));
     }
 }

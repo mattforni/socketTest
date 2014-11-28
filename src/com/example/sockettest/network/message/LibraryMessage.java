@@ -32,7 +32,7 @@ public class LibraryMessage extends Message {
         try {
             final String message = serialize();
             channel.write(ByteBuffer.wrap(message.getBytes()));
-            Log.i(tag(this), format("Published client id %s", message));
+            Log.i(tag(this), format("Published library: %s", message));
         } catch (IOException e) {
             Log.w(tag(this), "Unable to write to channel", e);
         }
