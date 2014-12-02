@@ -8,6 +8,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 
 import com.example.sockettest.Device;
+import com.example.sockettest.music.Song;
 import com.example.sockettest.music.Source;
 
 public class PlayClickListener implements OnItemClickListener {
@@ -21,7 +22,8 @@ public class PlayClickListener implements OnItemClickListener {
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-        Log.i(tag(this), format("Clicked on song '%s' with index %d", source.get(position).getTitle(), position));
-        device.play(source, source.get(position));
+        final Song song = source.get(position);
+        Log.i(tag(this), format("Clicked on song '%s' with index %d", song, position));
+        device.play(song);
     }
 }

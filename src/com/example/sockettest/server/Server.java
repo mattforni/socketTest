@@ -28,7 +28,7 @@ public class Server extends Device {
     private static final String ID = "SERVER";
     private static final int ADD_PLAYED_SONG_TIMER = 5000;
     private static final int WAIT_TIMER = 1000;
-    
+
     private ClientManager clientManager;
     private final MediaPlayer player;
     private final Handler playedSongsHandler;
@@ -57,7 +57,7 @@ public class Server extends Device {
     }
 
     @SuppressLint("NewApi")
-	@Override
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initializeTabs();
@@ -97,33 +97,32 @@ public class Server extends Device {
     public final boolean play() {
         // TODO need to support streaming
         if (player.isPlaying()) { return false; }
+
         boolean playing = false;
-        if (songManager.current() == -1) {
+        if (songManager.getCurrent() == null) {
             final Song song = songManager.getNext();
-            if (song != null) { playing = playSong(Source.LIBRARY, song); }
+            if (song != null) { playing = playSong(song); }
         } else {
             player.start();
             playing = true;
             Log.i(tag(this), "Playback has resumed");
         }
-        if (playing) {
-            libraryView.showPauseButton();
-        }
+
+        if (playing) { libraryView.showPauseButton(); }
+
         return playing;
     }
 
-    public final boolean play(final Source source, final Song song) {
-        if (songManager.isPlaying(source, song)) { return false; }
-        final boolean playing = playSong(source, song);
-        if (playing) {
-            libraryView.showPauseButton();
-        }
+    public final boolean play(final Song song) {
+        if (songManager.isPlaying(song)) { return false; }
+        final boolean playing = playSong(song);
+        if (playing) { libraryView.showPauseButton(); }
         return playing;
     }
 
     @Override
     public final boolean previous() {
-        return play(Source.LIBRARY, songManager.getPrevious());
+        return play(songManager.getPrevious());
     }
 
     @Override
@@ -141,15 +140,14 @@ public class Server extends Device {
     }
 
     // TODO need to support streaming
-    private boolean playSong(final Source source, final Song song) {
-        // TODO If the provided index is current index nothing should be done
-    	
+    private boolean playSong(final Song song) {
+        if (songManager.isPlaying(song)) { return false; }
+
         try {
             libraryView.updateCurrentSong(song);
             clientManager.publishCurrentSong(song);
-            songManager.setCurrentSong(song);
             preparePlayedSongsHandler(song);
-            
+
             if(song.isLocal(this)) {
                 player.reset();
                 player.setDataSource(song.getPath());
@@ -158,8 +156,8 @@ public class Server extends Device {
                 Log.i(tag(this), format("Playing: %s", song.getPath()));
                 return true;
             } else {
-            	clientManager.publishMessage(song.getOwner(), new StreamMessage(song));
-            	return true;
+                clientManager.publishMessage(song.getOwner(), new StreamMessage(song));
+                return true;
             }
         } catch (UnknownSongException e) {
             Log.e(tag(this),"Unknown song selected for playback", e);
@@ -170,45 +168,45 @@ public class Server extends Device {
     }
 
     public final void stream(Song song) {
-    	// TODO format and play audio data
+        // TODO format and play audio data
     }
-    
+
     public Song getCurrentSong() {
-    	return songManager.getCurrentSong();
+        return songManager.getCurrent();
     }
-    
+
     public List<Song> getPlaylist() {
-    	return songManager.getPlaylist();
+        return songManager.getPlaylist();
     }
-    
+
     public final void updateLibrary(final List<Song> songs) {
         Source.LIBRARY.append(songs);
         libraryView.updateLibrary(songManager.getAllSongs());
         // TODO CRASHES ONLY BECAUSE LENGTH OF LIBRARY IS TOO LONG AT THE MOMENT
         clientManager.publishLibrary(songManager.getAllSongs());
     }
-    
+
     public final void updatePlaylist(List<Song> playlist) {
-    	songManager.enqueue(playlist);
+        songManager.enqueue(playlist);
         playlistView.updatePlaylist(songManager.getPlaylist());
         clientManager.publishPlaylist(songManager.getPlaylist());
-	}
-    
-	private void preparePlayedSongsHandler(final Song song) {
-		playedSongsHandler.removeCallbacks(addPlayedSongsRunnable);
+    }
+
+    private void preparePlayedSongsHandler(final Song song) {
+        playedSongsHandler.removeCallbacks(addPlayedSongsRunnable);
         addPlayedSongsRunnable = new Runnable() {
-			@Override
-			public void run() {
-				while(player.getCurrentPosition() < ADD_PLAYED_SONG_TIMER) {
-					try {
-						Thread.sleep(WAIT_TIMER);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				songManager.pushPrevious(song);
-			}
+            @Override
+            public void run() {
+                while(player.getCurrentPosition() < ADD_PLAYED_SONG_TIMER) {
+                    try {
+                        Thread.sleep(WAIT_TIMER);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                songManager.pushPrevious(song);
+            }
         };
         playedSongsHandler.postDelayed(addPlayedSongsRunnable, ADD_PLAYED_SONG_TIMER);
-	}
+    }
 }

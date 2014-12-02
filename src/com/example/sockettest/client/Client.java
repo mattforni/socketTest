@@ -60,27 +60,30 @@ public class Client extends Device {
         super.onDestroy();
     }
 
+    @Override
     public final void stream(Song song) {
         // TODO send audio data
     }
 
-    // TODO need to support streaming
+    @Override
     public final boolean pause() {
         // TODO send message to Server to pause across network
         return true;
     }
 
-    // TODO need to support streaming
+    @Override
     public final boolean play() {
         // TODO send message to Server to play across network
         return true;
     }
 
-    public final boolean play(final Source source, final Song song) {
+    @Override
+    public final boolean play(final Song song) {
         // TODO send message to Server to play across network
         return true;
     }
 
+    @Override
     public final boolean previous() {
         // TODO send message to Server to previous across network
         return false;

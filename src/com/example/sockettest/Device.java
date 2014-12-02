@@ -53,7 +53,7 @@ public abstract class Device extends Activity implements OnTabChangeListener {
     public abstract boolean next();
     public abstract boolean pause();
     public abstract boolean play();
-    public abstract boolean play(Source source, Song song);
+    public abstract boolean play(Song song);
     public abstract boolean previous();
     public abstract void receiveClientId(String id, boolean reconnect);
 
