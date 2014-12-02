@@ -30,9 +30,9 @@ public class LibraryMessage extends Message {
     @Override
     public final void publish(final SocketChannel channel) {
         try {
-            final String message = serialize();
-            channel.write(ByteBuffer.wrap(message.getBytes()));
-            Log.i(tag(this), format("Published library: %s", message));
+            final String library = serialize();
+            channel.write(ByteBuffer.wrap(library.getBytes()));
+            Log.i(tag(this), format("Published library"));
         } catch (IOException e) {
             Log.w(tag(this), "Unable to write to channel", e);
         }
@@ -42,12 +42,13 @@ public class LibraryMessage extends Message {
     public final void receive(final Device device) {
         if (library != null) {
             device.updateLibrary(library);
-            Log.i(tag(this), format("Updated library"));
+            Log.i(tag(this), format("Received library"));
         } else {
             Log.e(tag(this), "Tried to update library");
         }
     }
 
+    @Override
     public final String serialize() {
         JsonObject serializedPlaylist = new JsonObject();
         serializedPlaylist.addProperty(CODE_KEY, CODE);

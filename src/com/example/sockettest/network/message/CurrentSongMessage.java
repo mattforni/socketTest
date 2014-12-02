@@ -27,7 +27,7 @@ public class CurrentSongMessage extends Message {
         try {
             final String message = serialize();
             channel.write(ByteBuffer.wrap(message.getBytes()));
-            Log.i(tag(this), format("Current song is %s", currentSong.toString()));
+            Log.i(tag(this), format("Published current song '%s'", currentSong.toString()));
         } catch (IOException e) {
             Log.w(tag(this), "Unable to write to channel", e);
         }
@@ -37,9 +37,9 @@ public class CurrentSongMessage extends Message {
     public final void receive(final Device device) {
         if (currentSong != null) {
             device.updateCurrentSong(currentSong);
-            Log.i(tag(this), format("Current song is %s", currentSong.toString()));
+            Log.i(tag(this), format("Received current song '%s'", currentSong.toString()));
         } else {
-            Log.e(tag(this), "Tried to update current song");
+            Log.e(tag(this), "Tried to set null current song");
         }
     }
 

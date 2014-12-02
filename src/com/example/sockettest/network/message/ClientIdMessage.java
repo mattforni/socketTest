@@ -31,7 +31,7 @@ public class ClientIdMessage extends Message {
         try {
             final String message = serialize();
             channel.write(ByteBuffer.wrap(message.getBytes()));
-            Log.i(tag(this), format("Published client id %s", message));
+            Log.i(tag(this), format("Published client ID '%s'", message));
         } catch (IOException e) {
             Log.w(tag(this), "Unable to write to channel", e);
         }
@@ -41,14 +41,14 @@ public class ClientIdMessage extends Message {
     public final void receive(final Device device) {
         if (id != null) {
             device.receiveClientId(id, reconnect);
-            Log.i(tag(this), format("Client ID received %s", id));
+            Log.i(tag(this), format("Received client ID '%s'", id));
         } else {
             Log.e(tag(this), "Tried to set null client ID");
         }
     }
 
     @Override
-    public String serialize() {
+    public final String serialize() {
         final JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(CODE_KEY, CODE);
         jsonObject.addProperty(ID_KEY, id);

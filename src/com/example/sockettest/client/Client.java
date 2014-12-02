@@ -42,7 +42,7 @@ public class Client extends Device {
     public final void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initializeTabs();
-        
+
         final Intent intent = getIntent();
         this.address = intent.getStringExtra(ADDRESS_KEY);
         this.port = intent.getIntExtra(PORT_KEY, 0);
@@ -105,19 +105,14 @@ public class Client extends Device {
             network.publishMessage(new ClientIdMessage(this.id, true));
         }
     }
-    
+
     public final void updateLibrary(final List<Song> songs) {
         Source.LIBRARY.update(songs);
         libraryView.updateLibrary(songManager.getAllSongs());
     }
-    
-    public final void updatePlaylist(List<Song> playlist) {
+
+    public final void updatePlaylist(final List<Song> playlist) {
         Source.PLAYLIST.update(playlist);
-        if(songManager.getPlaylist() == null) {
-            Log.i(tag(this), "PLAYLIST IS NULL");
-        }
-        else {
-            playlistView.updatePlaylist(songManager.getPlaylist());
-        }
+        playlistView.updatePlaylist(songManager.getPlaylist());
     }
 }

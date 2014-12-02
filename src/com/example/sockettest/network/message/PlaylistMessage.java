@@ -32,7 +32,7 @@ public class PlaylistMessage extends Message {
         try {
             final String message = serialize();
             channel.write(ByteBuffer.wrap(message.getBytes()));
-            Log.i(tag(this), format("Published client id %s", message));
+            Log.i(tag(this), format("Published playlist %s", message));
         } catch (IOException e) {
             Log.w(tag(this), "Unable to write to channel", e);
         }
@@ -42,12 +42,13 @@ public class PlaylistMessage extends Message {
     public final void receive(final Device device) {
         if (playlist != null) {
             device.updatePlaylist(playlist);
-            Log.i(tag(this), format("Updated playlist"));
+            Log.i(tag(this), format("Received playlist"));
         } else {
             Log.e(tag(this), "Tried to update playlist");
         }
     }
 
+    @Override
     public final String serialize() {
     	JsonObject serializedPlaylist = new JsonObject();
 		serializedPlaylist.addProperty(CODE_KEY, CODE);
