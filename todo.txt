@@ -1,0 +1,16 @@
+== FEATURES ==
+1. Streaming music of any sort.
+2. Next song (playing from library or playlist).
+3. Random song.
+4. Track previously played songs/history.
+
+== BETTER HANDLING ==
+1. Disconnecting a client from the server.
+2. Server shutdown.
+
+== BUGS ==
+1. Client long press also fires play click listener.
+2. Server doesn't always return the updated library.
+3. The whole library is not being updated.
+4. When client attempts to add a song to playlist from a disconnected device they can no longer
+   add any songs to the playlist for the duration of the connection.
